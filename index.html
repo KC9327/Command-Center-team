@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Daily Command Center</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#f5f5f0;padding-bottom:80px}
+.card{background:#fff;border-radius:14px;border:1px solid #eee;padding:16px;margin-bottom:12px}
+.lbl{font-size:11px;color:#999;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:block}
+.inp{width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:10px;font-size:14px;font-family:Georgia,serif;color:#222;background:#fafafa;outline:none;resize:none;margin-bottom:10px}
+.pbtn{width:100%;padding:12px;color:#fff;border:none;border-radius:10px;font-size:14px;font-family:Georgia,serif;cursor:pointer;margin-top:8px}
+.tbtn{padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;font-family:Georgia,serif;border:1px solid #ddd;background:transparent;color:#888;margin:3px}
+.sbtn{width:28px;height:28px;border-radius:8px;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-size:16px;font-weight:700;color:#333}
+.dbtn{float:right;background:none;border:none;color:#ccc;font-size:18px;cursor:pointer}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;padding:8px 4px 12px;overflow-x:auto}
+.nb{min-width:60px;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:6px 2px}
+.ai{background:#1a1a2e;border-radius:12px;padding:16px;color:#e8e4f0;font-size:14px;line-height:1.75;white-space:pre-wrap;margin-top:10px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState, useEffect} = React;
+
+function useLocalStorage(key, init) {
+  const [val, setVal] = useState(() => {
+    try {
+      const x = window.localStorage.getItem(key);
+      return x !== null ? JSON.parse(x) : init;
+    } catch(e) { return init; }
+  });
+  const save = (v) => {
+    setVal(v);
+    try { window.localStorage.setItem(key, JSON.stringify(v)); } catch(e) {}
+  };
+  return [val, save];
+}
+
+// Auto-assign colors to user-defined categories
+const PALETTE=[
+  {bg:"#F0EEF8",tx:"#3C3489",br:"#9B8FD9"},{bg:"#EAF3DE",tx:"#27500A",br:"#639922"},
+  {bg:"#E6F1FB",tx:"#0C447C",br:"#378ADD"},{bg:"#E1F5EE",tx:"#085041",br:"#1D9E75"},
+  {bg:"#FAEEDA",tx:"#633806",br:"#EF9F27"},{bg:"#FAECE7",tx:"#712B13",br:"#D85A30"},
+  {bg:"#FBEAF0",tx:"#72243E",br:"#D4537E"},{bg:"#F1EFE8",tx:"#444441",br:"#888780"}
+];
+
+function Tag({label,sel,onClick,bg,tx,br}){
+  return <button className="tbtn" onClick={onClick} style={{background:sel?(bg||"#EEEDFE"):"transparent",color:sel?(tx||"#3C3489"):"#888",border:sel?"1.5px solid "+(br||"#534AB7"):"1px solid #ddd",fontWeight:sel?600:400}}>{label}</button>;
+}
+
+function Dur({h,m,sh,sm}){
+  return <div style={{display:"flex",gap:12,alignItems:"center"}}>
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+      <span style={{fontSize:11,color:"#999"}}>HOURS</span>
+      <div style={{display:"flex",alignItems:"center",gap:6}}>
+        <button className="sbtn" onClick={()=>sh(Math.max(0,h-1))}>-</button>
+        <span style={{fontSize:20,fontWeight:700,minWidth:28,textAlign:"center"}}>{h}</span>
+        <button className="sbtn" onClick={()=>sh(Math.min(12,h+1))}>+</button>
+      </div>
+    </div>
+    <span style={{fontSize:22,color:"#ccc",marginTop:16}}>:</span>
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+      <span style={{fontSize:11,color:"#999"}}>MINS</span>
+      <div style={{display:"flex",alignItems:"center",gap:6}}>
+        <button className="sbtn" onClick={()=>sm(Math.max(0,m-5))}>-</button>
+        <span style={{fontSize:20,fontWeight:700,minWidth:28,textAlign:"center"}}>{m}</span>
+        <button className="sbtn" onClick={()=>sm(Math.min(55,m+5))}>+</button>
+      </div>
+    </div>
+    <span style={{fontSize:13,color:"#999",marginTop:16}}>{h>0?h+"h ":""}{m}m</span>
+  </div>;
+}
+
+function AIBtn({prompt,label}){
+  const [load,setLoad]=useState(false);
+  const [res,setRes]=useState("");
+  const [apiKey, setApiKey] = useLocalStorage("gemini_api_key", "");
+  const [ctx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Be direct and warm.");
+
+  async function run(attempt = 1){
+    let currentKey = apiKey;
+    if(!currentKey){
+      currentKey = window.prompt("Please enter your Google Gemini API Key.\n(Saved securely to this device's memory):");
+      if(!currentKey) return; 
+      setApiKey(currentKey);
+    }
+    setLoad(true);
+    if (attempt === 1) setRes("");
+    else setRes("Google servers busy. Auto-retrying... (Attempt " + attempt + " of 3)");
+
+    try{
+      const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+currentKey,{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({contents: [{ parts: [{ text: ctx+"\n\n"+prompt }] }]})
+      });
+      const d=await r.json();
+      if(d.error){
+        if((d.error.code === 503 || d.error.message.includes("demand")) && attempt < 3) {
+            setTimeout(() => run(attempt + 1), 3000); return; 
+        }
+        setRes("API Error: "+d.error.message);
+        if(d.error.code === 400 || d.error.code === 403) setApiKey(""); 
+        setLoad(false);
+      } else {
+        setRes(d.candidates[0].content.parts[0].text);
+        setLoad(false);
+      }
+    }catch(e){setRes("Network Error."); setLoad(false);}
+  }
+  return <div style={{marginTop:16}}>
+    <button onClick={()=>run(1)} disabled={load} className="pbtn" style={{background:load?"#888":"#1a1a2e"}}>{load?"Analysing...":"✦ "+label}</button>
+    {res&&<div className="ai">{res}</div>}
+  </div>;
+}
+
+function Activity(){
+  const [entries,setEntries]=useLocalStorage("act_entries",[]);
+  const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Commute, Break, Admin");
+  const CATS = actStr.split(",").map((c,i)=>({n:c.trim(), ...PALETTE[i%PALETTE.length]}));
+  
+  const [text,setText]=useState(""); const [cat,setCat]=useState(null);
+  const [h,setH]=useState(0);const [m,setM]=useState(30);
+  const [time,setTime]=useState(()=>{const n=new Date();return String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");});
+  
+  function add(){
+    if(!text.trim()||!cat)return alert("Fill description and category");
+    setEntries([...entries,{id:Date.now(),text,cat,mins:h*60+m,time}]);
+    setText("");setCat(null);setH(0);setM(30);
+  }
+  const total=entries.reduce((s,e)=>s+e.mins,0);
+  const grp={};entries.forEach(e=>{grp[e.cat]=(grp[e.cat]||0)+e.mins;});
+  const log=entries.map(e=>`${e.time} | ${e.cat} | ${Math.floor(e.mins/60)}h${e.mins%60}m | ${e.text}`).join("\n");
+  
+  return <div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+      <div style={{background:"#1a1a2e",borderRadius:12,padding:14,color:"#fff",textAlign:"center"}}>
+        <div style={{fontSize:26,fontWeight:700}}>{entries.length}</div>
+        <div style={{fontSize:12,color:"#aaa",marginTop:2}}>Entries</div>
+      </div>
+      <div style={{background:"#1a1a2e",borderRadius:12,padding:14,color:"#fff",textAlign:"center"}}>
+        <div style={{fontSize:22,fontWeight:700}}>{Math.floor(total/60)}h {total%60}m</div>
+        <div style={{fontSize:12,color:"#aaa",marginTop:2}}>Tracked</div>
+      </div>
+    </div>
+    <div className="card">
+      <span className="lbl">Start time</span>
+      <input type="time" value={time} onChange={e=>setTime(e.target.value)} className="inp" style={{width:"auto"}}/>
+      <span className="lbl">What did you do?</span>
+      <textarea rows={2} value={text} onChange={e=>setText(e.target.value)} placeholder="Describe the activity..." className="inp"/>
+      <span className="lbl">Category</span>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{CATS.map(c=><Tag key={c.n} label={c.n} sel={cat===c.n} onClick={()=>setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br}/>)}</div>
+      <span className="lbl">Duration</span>
+      <Dur h={h} m={m} sh={setH} sm={setM}/>
+      <button onClick={add} className="pbtn" style={{background:"#1a1a2e"}}>+ Log activity</button>
+    </div>
+    {entries.length>0&&<>
+      <div className="card">
+        <span className="lbl">Time breakdown</span>
+        {Object.entries(grp).sort((a,b)=>b[1]-a[1]).map(([c,mins])=>{
+          const ct=CATS.find(x=>x.n===c);
+          return <div key={c} style={{marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:13}}>{c}</span><span style={{fontSize:13,color:"#888"}}>{Math.floor(mins/60)}h {mins%60}m</span></div>
+            <div style={{height:6,background:"#f0f0f0",borderRadius:4}}><div style={{height:6,width:Math.round((mins/total)*100)+"%",background:ct?.br||"#534AB7",borderRadius:4}}/></div>
+          </div>;
+        })}
+      </div>
+      {[...entries].reverse().map(e=>{
+        const c=CATS.find(x=>x.n===e.cat);
+        return <div key={e.id} className="card">
+          <button className="dbtn" onClick={()=>setEntries(entries.filter(x=>x.id!==e.id))}>x</button>
+          <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:c?.bg||"#eee",color:c?.tx||"#333"}}>{e.cat}</span>
+          <div style={{fontSize:14,color:"#222",marginTop:6}}>{e.text}</div>
+          <div style={{fontSize:12,color:"#aaa",marginTop:4}}>{e.time} · {Math.floor(e.mins/60)}h {e.mins%60}m</div>
+        </div>;
+      })}
+      <AIBtn label="Review my day" prompt={"Review this day log:\n"+log+"\n\nTotal: "+Math.floor(total/60)+"h "+total%60+"m\n\nGive: 1)Identity statement 2)Time lost 3)Wins 4)Alignment check 5)3 improvements for tomorrow 6)CEO mantra"}/>
+    </>}
+  </div>;
+}
+
+function Finance(){
+  const [expenses,setExpenses]=useLocalStorage("fin_exp",[]); const [invs,setInvs]=useLocalStorage("fin_inv",[]);
+  const [expStr]=useLocalStorage("sys_exp","Food, Transport, Bills, Family, Fun, Other");
+  const [invStr]=useLocalStorage("sys_inv","Skills, Health, Savings, Other");
+  const ECATS = expStr.split(",").map(s=>s.trim()); const ICATS = invStr.split(",").map(s=>s.trim());
+
+  const [tab,setTab]=useState("exp");
+  const [ed,setEd]=useState("");const [ea,setEa]=useState("");const [ec,setEc]=useState(null);
+  const [id,setId]=useState("");const [ia,setIa]=useState("");const [ic,setIc]=useState(null);
+  const te=expenses.reduce((s,e)=>s+parseFloat(e.a||0),0); const ti=invs.reduce((s,e)=>s+parseFloat(e.a||0),0);
+  
+  function addE(){if(!ed||!ea||!ec)return alert("Fill all fields");setExpenses([...expenses,{id:Date.now(),d:ed,a:ea,c:ec}]);setEd("");setEa("");setEc(null);}
+  function addI(){if(!id||!ia||!ic)return alert("Fill all fields");setInvs([...invs,{id:Date.now(),d:id,a:ia,c:ic}]);setId("");setIa("");setIc(null);}
+  const sum="Expenses:\n"+expenses.map(e=>"- "+e.c+": "+e.d+" Rs."+e.a).join("\n")+"\nInvestments:\n"+invs.map(e=>"- "+e.c+": "+e.d+" Rs."+e.a).join("\n");
+  
+  return <div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+      <div style={{background:"#7F0000",borderRadius:12,padding:14,color:"#fff",textAlign:"center"}}><div style={{fontSize:22,fontWeight:700}}>Rs.{te.toFixed(0)}</div><div style={{fontSize:12,color:"#ffaaaa",marginTop:2}}>Spent</div></div>
+      <div style={{background:"#0F6E56",borderRadius:12,padding:14,color:"#fff",textAlign:"center"}}><div style={{fontSize:22,fontWeight:700}}>Rs.{ti.toFixed(0)}</div><div style={{fontSize:12,color:"#aaffd4",marginTop:2}}>Invested</div></div>
+    </div>
+    <div style={{display:"flex",gap:8,marginBottom:14}}>
+      {["exp","inv"].map(t=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"9px 0",borderRadius:10,border:tab===t?"1.5px solid #1a1a2e":"1px solid #eee",background:tab===t?"#1a1a2e":"#fafafa",color:tab===t?"#fff":"#888",fontFamily:"Georgia,serif",fontSize:13,cursor:"pointer",fontWeight:tab===t?600:400}}>{t==="exp"?"Expense":"Investment"}</button>)}
+    </div>
+    <div className="card">
+      <span className="lbl">Category</span>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{tab==="exp"?ECATS.map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>):ICATS.map(c=><Tag key={c} label={c} sel={ic===c} onClick={()=>setIc(c)} bg="#EAF3DE" tx="#27500A" br="#639922"/>)}</div>
+      <span className="lbl">Description</span>
+      <input value={tab==="exp"?ed:id} onChange={e=>tab==="exp"?setEd(e.target.value):setId(e.target.value)} placeholder="e.g. Groceries" className="inp"/>
+      <span className="lbl">Amount</span>
+      <input type="number" value={tab==="exp"?ea:ia} onChange={e=>tab==="exp"?setEa(e.target.value):setIa(e.target.value)} placeholder="0" className="inp" style={{width:140}}/>
+      <button onClick={tab==="exp"?addE:addI} className="pbtn" style={{background:tab==="exp"?"#7F0000":"#0F6E56"}}>+ Add {tab==="exp"?"expense":"investment"}</button>
+      {(tab==="exp"?expenses:invs).map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"0.5px solid #f0f0f0"}}>
+        <div><span style={{fontSize:13}}>{e.d}</span><span style={{fontSize:11,color:"#aaa",marginLeft:8}}>{e.c}</span></div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:14,fontWeight:600,color:tab==="exp"?"#7F0000":"#0F6E56"}}>Rs.{e.a}</span><button className="dbtn" onClick={()=>tab==="exp"?setExpenses(expenses.filter(x=>x.id!==e.id)):setInvs(invs.filter(x=>x.id!==e.id))}>x</button></div>
+      </div>)}
+    </div>
+    {(expenses.length>0||invs.length>0)&&<AIBtn label="Get financial insights" prompt={"Analyse finances:\n"+sum+"\n\nGive: 1)Spending pattern 2)Goal alignment 3)One thing to cut 4)Tip for tomorrow"}/>}
+  </div>;
+}
+
+function Gym(){
+  const [gymStr]=useLocalStorage("sys_gym","Push, Pull, Legs, Core, Cardio, Rest");
+  const MUSCLES = gymStr.split(",").map(s=>s.trim());
+  const [muscle,setMuscle]=useLocalStorage("gym_m",null); const [energy,setEnergy]=useLocalStorage("gym_e",null);
+  const [exs,setExs]=useLocalStorage("gym_exs",[]); const [notes,setNotes]=useLocalStorage("gym_n","");
+  const [en,setEn]=useState("");const [es,setEs]=useState("");const [er,setEr]=useState("");const [ew,setEw]=useState("");
+  const [h,setH]=useLocalStorage("gym_h",0);const [m,setM]=useLocalStorage("gym_min",45);
+  function addEx(){if(!en.trim())return;setExs([...exs,{id:Date.now(),n:en,s:es,r:er,w:ew}]);setEn("");setEs("");setEr("");setEw("");}
+  return <div>
+    <div className="card">
+      <span className="lbl">Focus</span>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{MUSCLES.map(g=><Tag key={g} label={g} sel={muscle===g} onClick={()=>setMuscle(g)} bg="#EAF3DE" tx="#27500A" br="#639922"/>)}</div>
+      <span className="lbl">Energy</span>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>{["High","Medium","Low"].map(e=><button key={e} onClick={()=>setEnergy(e)} style={{flex:1,padding:"8px 0",borderRadius:10,border:energy===e?"1.5px solid #639922":"1px solid #eee",background:energy===e?"#EAF3DE":"#fafafa",color:energy===e?"#27500A":"#888",fontFamily:"Georgia,serif",fontSize:13,cursor:"pointer",fontWeight:energy===e?600:400}}>{e}</button>)}</div>
+      <span className="lbl">Duration</span><Dur h={h} m={m} sh={setH} sm={setM}/>
+    </div>
+    <div className="card">
+      <span className="lbl">Log exercise</span>
+      <input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise" className="inp"/>
+      <div style={{display:"flex",gap:8}}><input value={es} onChange={e=>setEs(e.target.value)} placeholder="Sets" className="inp"/><input value={er} onChange={e=>setEr(e.target.value)} placeholder="Reps" className="inp"/><input value={ew} onChange={e=>setEw(e.target.value)} placeholder="Weight" className="inp"/></div>
+      <button onClick={addEx} className="pbtn" style={{background:"#27500A"}}>+ Add exercise</button>
+      {exs.map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"0.5px solid #f0f0f0"}}><span style={{fontSize:13}}>{e.n}</span><div style={{display:"flex",gap:6,alignItems:"center"}}><span style={{fontSize:12,color:"#639922"}}>{e.s}x{e.r}@{e.w}</span><button className="dbtn" onClick={()=>setExs(exs.filter(x=>x.id!==e.id))}>x</button></div></div>)}
+    </div>
+    <div className="card"><span className="lbl">Notes</span><textarea rows={2} value={notes} onChange={e=>setNotes(e.target.value)} className="inp"/></div>
+    {(muscle||exs.length>0)&&<AIBtn label="Get gym insights" prompt={"Analyse gym session:\nFocus: "+muscle+"\nEnergy: "+energy+"\n"+exs.map(e=>"- "+e.n+": "+e.s+"x"+e.r+"@"+e.w).join("\n")+"\nNotes: "+notes+"\n\nGive: 1)Assessment 2)Form tip 3)Recovery 4)Next target 5)Motivation"}/>}
+  </div>;
+}
+
+function Skills(){
+  const [skillStr]=useLocalStorage("sys_skill","Design, Coding, Marketing, Reading");
+  const SUBJECTS = skillStr.split(",").map(s=>s.trim());
+  const [sub,setSub]=useLocalStorage("sk_s",null); const [energy,setEnergy]=useLocalStorage("sk_e",null);
+  const [topic,setTopic]=useLocalStorage("sk_t",""); const [learned,setLearned]=useLocalStorage("sk_l","");
+  const [struggle,setStruggle]=useLocalStorage("sk_st",""); const [progress,setProgress]=useLocalStorage("sk_p","");
+  const [h,setH]=useLocalStorage("sk_h",0);const [m,setM]=useLocalStorage("sk_m",50);
+  return <div>
+    <div className="card">
+      <span className="lbl">Subject</span>
+      <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>{SUBJECTS.map(s=><Tag key={s} label={s} sel={sub===s} onClick={()=>setSub(s)} bg="#FAEEDA" tx="#633806" br="#EF9F27"/>)}</div>
+      <span className="lbl">Energy</span>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>{["High","Medium","Low"].map(e=><button key={e} onClick={()=>setEnergy(e)} style={{flex:1,padding:"8px 0",borderRadius:10,border:energy===e?"1.5px solid #EF9F27":"1px solid #eee",background:energy===e?"#FAEEDA":"#fafafa",color:energy===e?"#633806":"#888",fontFamily:"Georgia,serif",fontSize:13,cursor:"pointer",fontWeight:energy===e?600:400}}>{e}</button>)}</div>
+      <span className="lbl">Duration</span><Dur h={h} m={m} sh={setH} sm={setM}/>
+    </div>
+    <div className="card">
+      <span className="lbl">Topic studied</span><input value={topic} onChange={e=>setTopic(e.target.value)} className="inp"/>
+      <span className="lbl">Learned</span><textarea rows={2} value={learned} onChange={e=>setLearned(e.target.value)} className="inp"/>
+      <span className="lbl">Struggled with</span><textarea rows={2} value={struggle} onChange={e=>setStruggle(e.target.value)} className="inp"/>
+      <span className="lbl">Progress</span><input value={progress} onChange={e=>setProgress(e.target.value)} className="inp"/>
+    </div>
+    {(sub||learned)&&<AIBtn label="Get learning insights" prompt={"Analyse study:\nSub: "+sub+"\nTopic: "+topic+"\nLearned: "+learned+"\nStruggled: "+struggle+"\n\nGive: 1)Assessment 2)Concept clarity tip 3)Next focus 4)Strategy tip"}/>}
+  </div>;
+}
+
+function Settings(){
+  const [ctx, setCtx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Keep responses direct, warm, and max 250 words.");
+  const [act, setAct] = useLocalStorage("sys_act", "Deep work, Meetings, Commute, Break, Admin");
+  const [exp, setExp] = useLocalStorage("sys_exp", "Food, Transport, Bills, Family, Fun, Other");
+  const [inv, setInv] = useLocalStorage("sys_inv", "Skills, Health, Savings, Other");
+  const [gym, setGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
+  const [skill, setSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
+  
+  return <div>
+    <div className="card" style={{border:"1px solid #1a1a2e"}}>
+      <h3 style={{marginBottom:10}}>Setup Your Assistant</h3>
+      <span className="lbl">AI Persona & Rules (Who are you? What are your goals?)</span>
+      <textarea rows={4} value={ctx} onChange={e=>setCtx(e.target.value)} className="inp" placeholder="e.g., I am a 25yo designer trying to save money and learn Spanish..."/>
+    </div>
+    <div className="card">
+      <h3 style={{marginBottom:10}}>Custom Categories</h3>
+      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Separate items with commas (,)</p>
+      
+      <span className="lbl">Activity Tracker Categories</span>
+      <input value={act} onChange={e=>setAct(e.target.value)} className="inp"/>
+      
+      <span className="lbl">Expense Categories</span>
+      <input value={exp} onChange={e=>setExp(e.target.value)} className="inp"/>
+      
+      <span className="lbl">Investment Categories</span>
+      <input value={inv} onChange={e=>setInv(e.target.value)} className="inp"/>
+
+      <span className="lbl">Gym/Health Focus</span>
+      <input value={gym} onChange={e=>setGym(e.target.value)} className="inp"/>
+
+      <span className="lbl">Skill/Study Subjects</span>
+      <input value={skill} onChange={e=>setSkill(e.target.value)} className="inp"/>
+    </div>
+  </div>;
+}
+
+const TABS=[
+  {id:"activity",icon:"◎",label:"Activity"},
+  {id:"finance",icon:"₹",label:"Finance"},
+  {id:"gym",icon:"◈",label:"Gym"},
+  {id:"skills",icon:"◐",label:"Skills"},
+  {id:"settings",icon:"⚙",label:"Settings"}
+];
+
+function App(){
+  const [tab,setTab]=useState("activity");
+  const hr=new Date().getHours();
+  const greet=hr<12?"Good morning":hr<17?"Good afternoon":"Good evening";
+  const today=new Date().toLocaleDateString("en-US",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  return <div style={{maxWidth:480,margin:"0 auto",paddingBottom:90}}>
+    <div style={{background:"#1a1a2e",padding:"20px 16px 16px",borderRadius:"0 0 20px 20px",marginBottom:16}}>
+      <p style={{fontSize:11,color:"#8888aa",letterSpacing:2,marginBottom:4}}>DAILY COMMAND CENTER v6</p>
+      <p style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:2}}>{greet}</p>
+      <p style={{fontSize:13,color:"#8888aa"}}>{today}</p>
+    </div>
+    <div style={{padding:"0 12px"}}>
+      <div style={{display:tab==="activity"?"block":"none"}}><Activity/></div>
+      <div style={{display:tab==="finance"?"block":"none"}}><Finance/></div>
+      <div style={{display:tab==="gym"?"block":"none"}}><Gym/></div>
+      <div style={{display:tab==="skills"?"block":"none"}}><Skills/></div>
+      <div style={{display:tab==="settings"?"block":"none"}}><Settings/></div>
+    </div>
+    <div className="nav">
+      {TABS.map(t=><button key={t.id} className="nb" onClick={()=>setTab(t.id)}>
+        <span style={{fontSize:18,color:tab===t.id?"#1a1a2e":"#ccc"}}>{t.icon}</span>
+        <span style={{fontSize:10,fontFamily:"Georgia,serif",color:tab===t.id?"#1a1a2e":"#bbb",fontWeight:tab===t.id?600:400,letterSpacing:0.5}}>{t.label}</span>
+      </button>)}
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
