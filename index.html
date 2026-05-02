@@ -360,42 +360,98 @@ const TABS=[
 
 function App(){
   const [tab, setTab] = useState("activity");
-  const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6", false);
+  const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6_final", false);
   const [showWelcome, setShowWelcome] = useState(!hasVisited);
+  const [welcomeStep, setWelcomeStep] = useState(1);
+  const [tempKey, setTempKey] = useState("");
 
   const hr = new Date().getHours();
   const greet = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
   const today = new Date().toLocaleDateString("en-US", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
 
-  const closeWelcome = () => {
+  const finishWelcome = () => {
     setHasVisited(true);
     setShowWelcome(false);
   };
 
+  const saveKeyAndNext = () => {
+    if(tempKey.trim() !== "") {
+      localStorage.setItem("gemini_api_key", tempKey.trim());
+    }
+    setWelcomeStep(3);
+  };
+
   return <div style={{maxWidth: 480, margin: "0 auto", paddingBottom: 90}}>
-    {/* FIRST-TIME USER WELCOME POPUP */}
+    {/* STEP-BY-STEP ONBOARDING WIZARD */}
     {showWelcome && (
-      <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
-        <div className="card" style={{textAlign: "center", border: "2px solid #3C3489"}}>
-          <h2 style={{color: "#3C3489", marginBottom: 15}}>Welcome, Team! 🚀</h2>
-          <p style={{fontSize: 14, color: "#444", marginBottom: 10, lineHeight: "1.5"}}>
-            To get started, you need to set up your personal <b>API Key</b> and <b>Categories</b>.
-          </p>
-          <p style={{fontSize: 13, color: "#666", marginBottom: 20}}>
-            Click the <b>⚙ Settings</b> icon at the bottom right to begin. 
-            Remember, your data stays 100% private on this device.
-          </p>
-          <button onClick={closeWelcome} className="pbtn" style={{background: "#3C3489"}}>Got it, let's go!</button>
+      <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
+        <div className="card" style={{textAlign: "center", border: "2px solid #3C3489", width: "100%", maxWidth: 400, background: "#fff"}}>
+          
+          {/* STEP 1: CHOOSE AI OR NO AI */}
+          {welcomeStep === 1 && (
+            <div>
+              <h2 style={{color: "#3C3489", marginBottom: 15}}>Welcome, Team! 🚀</h2>
+              <p style={{fontSize: 14, color: "#444", marginBottom: 20, lineHeight: "1.5"}}>
+                Your Daily Command Center is ready. Would you like to enable the <b>AI Daily Review</b> feature?
+              </p>
+              <button onClick={() => setWelcomeStep(2)} className="pbtn" style={{background: "#3C3489", marginBottom: 12, padding: "12px"}}>
+                ✨ Option 1: Continue with AI
+              </button>
+              <button onClick={() => setWelcomeStep(3)} className="pbtn" style={{background: "#666", padding: "12px"}}>
+                ⏭️ Option 2: Basic Mode (No AI)
+              </button>
+            </div>
+          )}
+
+          {/* STEP 2: API SETUP (Only shows if Option 1 is clicked) */}
+          {welcomeStep === 2 && (
+            <div>
+              <h2 style={{color: "#3C3489", marginBottom: 15}}>🤖 Connect AI</h2>
+              <div style={{fontSize: 13, color: "#444", marginBottom: 15, textAlign: "left", lineHeight: "1.6", background: "#f5f5f5", padding: 12, borderRadius: 8}}>
+                <b>Step 1:</b> Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" style={{color:"#d85a30", fontWeight:"bold", textDecoration:"underline"}}>Google AI Studio</a><br/>
+                <b>Step 2:</b> Sign in and click <b>Create API Key</b><br/>
+                <b>Step 3:</b> Copy the key and paste it below.
+              </div>
+              <input 
+                type="text" 
+                placeholder="Paste your API key here..." 
+                value={tempKey} 
+                onChange={(e) => setTempKey(e.target.value)}
+                style={{width: "100%", padding: "12px", marginBottom: 15, border: "1.5px solid #ccc", borderRadius: 6, boxSizing: "border-box", fontSize: 14}}
+              />
+              <button onClick={saveKeyAndNext} className="pbtn" style={{background: "#3C3489", marginBottom: 10}}>Save Key & Continue</button>
+              <button onClick={() => setWelcomeStep(3)} style={{background: "none", border: "none", color: "#666", textDecoration: "underline", cursor: "pointer", fontSize: 12}}>Skip for now</button>
+            </div>
+          )}
+
+          {/* STEP 3: PRIVACY & DATA EXPORT */}
+          {welcomeStep === 3 && (
+            <div>
+              <h2 style={{color: "#3C3489", marginBottom: 15}}>🛡️ 100% Private</h2>
+              <p style={{fontSize: 14, color: "#444", marginBottom: 15, lineHeight: "1.5"}}>
+                <b>Your data never leaves this device.</b> Nobody else can see your entries.
+              </p>
+              <div style={{background: "#F0EEF8", padding: 12, borderRadius: 8, marginBottom: 20, textAlign: "left"}}>
+                <p style={{fontSize: 12, color: "#3C3489", margin: 0, lineHeight: "1.5"}}>
+                  ⚠️ <b>Important:</b> If you clear your browser cache, your data will be erased. Use the <b>Export Backup</b> button in the ⚙️ <b>Settings</b> tab frequently to save your history!
+                </p>
+              </div>
+              <button onClick={finishWelcome} className="pbtn" style={{background: "#3C3489"}}>Finish Setup & Enter App</button>
+            </div>
+          )}
+
         </div>
       </div>
     )}
 
+    {/* HEADER */}
     <div style={{background: "#1a1a2e", padding: "20px 16px 16px", borderRadius: "0 0 20px 20px", marginBottom: 16}}>
-      <p style={{fontSize: 11, color: "#8888aa", letterSpacing: 2, marginBottom: 4}}>DAILY COMMAND CENTER v6</p>
+      <p style={{fontSize: 11, color: "#8888aa", letterSpacing: 2, marginBottom: 4}}>DAILY COMMAND CENTER</p>
       <p style={{fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 2}}>{greet}</p>
       <p style={{fontSize: 13, color: "#8888aa"}}>{today}</p>
     </div>
 
+    {/* TABS */}
     <div style={{padding: "0 12px"}}>
       <div style={{display: tab === "activity" ? "block" : "none"}}><Activity/></div>
       <div style={{display: tab === "finance" ? "block" : "none"}}><Finance/></div>
@@ -404,6 +460,7 @@ function App(){
       <div style={{display: tab === "settings" ? "block" : "none"}}><Settings/></div>
     </div>
 
+    {/* BOTTOM NAVIGATION */}
     <div className="nav">
       {TABS.map(t => <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
         <span style={{fontSize: 18, color: tab === t.id ? "#1a1a2e" : "#ccc"}}>{t.icon}</span>
