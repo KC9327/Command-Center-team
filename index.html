@@ -132,11 +132,15 @@ function Activity(){
   const [entries,setEntries]=useLocalStorage("act_entries",[]);
   
   const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Commute, Break, Admin");
-  const defCats = actStr.split(",").map((c,i)=>({n:c.trim(), ...PALETTE[i%PALETTE.length]}));
+  const actS = typeof actStr === "string" ? actStr : "Deep work";
+  const defCats = actS.split(",").map((c,i)=>({n:c.trim(), ...PALETTE[i%PALETTE.length]}));
   
   const [customCatsStr] = useLocalStorage("sys_custom_cats", "[]");
   let customCats = [];
-  try { customCats = JSON.parse(customCatsStr); } catch(e) { customCats = []; }
+  try { 
+    const parsed = JSON.parse(customCatsStr); 
+    if(Array.isArray(parsed)) customCats = parsed;
+  } catch(e) {}
 
   const ALL_CATS = [...defCats];
   let colorIndex = defCats.length;
@@ -236,7 +240,8 @@ function Finance(){
   const [expenses,setExpenses]=useLocalStorage("fin_exp",[]); const [invs,setInvs]=useLocalStorage("fin_inv",[]);
   const [expStr]=useLocalStorage("sys_exp","Food, Transport, Bills, Family, Fun, Other");
   const [invStr]=useLocalStorage("sys_inv","Skills, Health, Savings, Other");
-  const ECATS = expStr.split(",").map(s=>s.trim()); const ICATS = invStr.split(",").map(s=>s.trim());
+  const ECATS = (typeof expStr === "string" ? expStr : "").split(",").map(s=>s.trim()).filter(x=>x);
+  const ICATS = (typeof invStr === "string" ? invStr : "").split(",").map(s=>s.trim()).filter(x=>x);
 
   const [tab,setTab]=useState("exp");
   const [ed,setEd]=useState("");const [ea,setEa]=useState("");const [ec,setEc]=useState(null);
@@ -274,7 +279,7 @@ function Finance(){
 
 function Gym(){
   const [gymStr]=useLocalStorage("sys_gym","Push, Pull, Legs, Core, Cardio, Rest");
-  const MUSCLES = gymStr.split(",").map(s=>s.trim());
+  const MUSCLES = (typeof gymStr === "string" ? gymStr : "").split(",").map(s=>s.trim()).filter(x=>x);
   const [muscle,setMuscle]=useLocalStorage("gym_m",null); const [energy,setEnergy]=useLocalStorage("gym_e",null);
   const [exs,setExs]=useLocalStorage("gym_exs",[]); const [notes,setNotes]=useLocalStorage("gym_n","");
   const [en,setEn]=useState("");const [es,setEs]=useState("");const [er,setEr]=useState("");const [ew,setEw]=useState("");
@@ -302,7 +307,7 @@ function Gym(){
 
 function Skills(){
   const [skillStr]=useLocalStorage("sys_skill","Design, Coding, Marketing, Reading");
-  const SUBJECTS = skillStr.split(",").map(s=>s.trim());
+  const SUBJECTS = (typeof skillStr === "string" ? skillStr : "").split(",").map(s=>s.trim()).filter(x=>x);
   const [sub,setSub]=useLocalStorage("sk_s",null); const [energy,setEnergy]=useLocalStorage("sk_e",null);
   const [topic,setTopic]=useLocalStorage("sk_t",""); const [learned,setLearned]=useLocalStorage("sk_l","");
   const [struggle,setStruggle]=useLocalStorage("sk_st",""); const [progress,setProgress]=useLocalStorage("sk_p","");
@@ -346,7 +351,6 @@ const DEFAULT_TABS = [
 ];
 
 function Settings(){
-  // Master Sync Hooks
   const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Keep responses direct, warm, and max 250 words.");
   const [sysAct, setSysAct] = useLocalStorage("sys_act", "Deep work, Meetings, Commute, Break, Admin");
   const [sysExp, setSysExp] = useLocalStorage("sys_exp", "Food, Transport, Bills, Family, Fun, Other");
@@ -354,7 +358,6 @@ function Settings(){
   const [sysGym, setSysGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
   const [sysSkill, setSysSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
   
-  // Draft States for Editing Without Breaking the UI immediately
   const [draftCtx, setDraftCtx] = useState(sysCtx);
   const [draftAct, setDraftAct] = useState(sysAct);
   const [draftExp, setDraftExp] = useState(sysExp);
@@ -372,10 +375,12 @@ function Settings(){
     alert("✅ System Defaults & Persona Saved!");
   };
 
-  // Custom Categories Draft Logic
   const [customCatsStr, setCustomCatsStr] = useLocalStorage("sys_custom_cats", "[]");
   const [draftCats, setDraftCats] = useState(() => {
-    try { return JSON.parse(customCatsStr); } catch(e) { return []; }
+    try { 
+       const parsed = JSON.parse(customCatsStr); 
+       return Array.isArray(parsed) ? parsed : [];
+    } catch(e) { return []; }
   });
 
   const saveCategories = () => {
@@ -383,15 +388,16 @@ function Settings(){
     alert("✅ Custom Categories Saved!");
   };
 
-  // Navigation Tabs Draft Logic
   const [tabsStr, setTabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
   const [draftTabs, setDraftTabs] = useState(() => {
-    try { return JSON.parse(tabsStr); } catch(e) { return DEFAULT_TABS; }
+    try { 
+       const parsed = JSON.parse(tabsStr); 
+       return Array.isArray(parsed) ? parsed : DEFAULT_TABS;
+    } catch(e) { return DEFAULT_TABS; }
   });
 
   const saveTabs = () => {
     if(draftTabs.length === 0) return alert("❌ You must have at least one tab!");
-    // Ensure Settings is always there at the end
     const finalTabs = draftTabs.filter(t => t.id !== "settings");
     finalTabs.push({ id: "settings", icon: "⚙", label: "Settings" });
     setTabsStr(JSON.stringify(finalTabs));
@@ -521,11 +527,13 @@ function Settings(){
 function App(){
   const [tabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
   let tabs = DEFAULT_TABS;
-  try { tabs = JSON.parse(tabsStr); } catch(e) {}
+  try { 
+     const parsed = JSON.parse(tabsStr); 
+     if(Array.isArray(parsed)) tabs = parsed;
+  } catch(e) {}
 
   const [tab, setTab] = useState("activity");
 
-  // Fallback if current tab gets deleted
   useEffect(() => {
     if (tabs.length > 0 && !tabs.find(x => x.id === tab)) {
       setTab(tabs[0].id);
