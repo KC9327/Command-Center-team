@@ -95,9 +95,13 @@ function AIBtn({prompt, label}){
   const [identity] = useLocalStorage("sys_ctx", "");
 
   const aiLinks = {
-    chatgpt: "https://chatgpt.com/", gemini: "https://gemini.google.com/", 
-    claude: "https://claude.ai/", perplexity: "https://www.perplexity.ai/",
-    grok: "https://grok.com/", deepseek: "https://chat.deepseek.com/"
+    chatgpt: "https://chatgpt.com/", 
+    gemini: "https://gemini.google.com/", 
+    claude: "https://claude.ai/", 
+    perplexity: "https://www.perplexity.ai/",
+    grok: "https://grok.com/", 
+    deepseek: "https://chat.deepseek.com/",
+    manual: null // No link for manual copy
   };
 
   const handleBridge = async () => {
@@ -105,35 +109,53 @@ function AIBtn({prompt, label}){
       setStatus("copying");
       const finalPrompt = `ABOUT ME / ASSISTANT PERSONA:\n${identity}\n\nDATA TO ANALYZE (${label}):\n${prompt}\n\nSTRATEGIC INSTRUCTIONS:\n1. Review the data and analyze impact.\n2. Provide insights on betterment and improvisation.\n3. End with an encouragement quote.`;
       
-      // Robust Copy for Windows/Android/iOS
+      // Universal Copy Logic
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(finalPrompt);
       } else {
         const textArea = document.createElement("textarea");
-        textArea.value = finalPrompt; document.body.appendChild(textArea);
-        textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea);
+        textArea.value = finalPrompt; 
+        document.body.appendChild(textArea);
+        textArea.select(); 
+        document.execCommand('copy'); 
+        document.body.removeChild(textArea);
       }
       
       setStatus("copied");
+
+      // Only open a link if it's NOT the manual copy option
       setTimeout(() => {
-        window.open(aiLinks[aiModel], "_blank");
+        if (aiLinks[aiModel]) {
+          window.open(aiLinks[aiModel], "_blank");
+        }
         setStatus("idle");
       }, 1500);
-    } catch (err) { setStatus("idle"); alert("Clipboard error."); }
+    } catch (err) { 
+      setStatus("idle"); 
+      alert("Clipboard error. Please ensure the app has permission to access the clipboard."); 
+    }
   };
 
   return <div className="ai-bridge">
     <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12}}>
-      <span className="lbl" style={{marginBottom:0}}>Choose AI Model</span>
+      <span className="lbl" style={{marginBottom:0}}>Route To AI</span>
       <select value={aiModel} onChange={(e) => setAiModel(e.target.value)} style={{padding: "4px 8px", background: "#F8F7F2", border: "1px solid #C4BEAD", borderRadius: "4px", fontFamily: "'Merriweather', serif", fontSize: 12}}>
-        <option value="chatgpt">ChatGPT</option><option value="gemini">Gemini</option>
-        <option value="claude">Claude</option><option value="perplexity">Perplexity</option>
-        <option value="grok">Grok AI</option><option value="deepseek">DeepSeek</option>
+        <option value="chatgpt">ChatGPT</option>
+        <option value="gemini">Gemini</option>
+        <option value="claude">Claude</option>
+        <option value="perplexity">Perplexity</option>
+        <option value="grok">Grok AI</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="manual">📋 Manual Copy (Clipboard)</option>
       </select>
     </div>
     <button onClick={handleBridge} disabled={status !== "idle"} className="pbtn" style={{background: status === "copied" ? "#3A4533" : "#232528", marginTop: 0}}>
-      {status === "idle" ? "✦ "+label : "✓ Copied! Opening AI..."}
+      {status === "idle" ? "✦ " + label : 
+       aiModel === "manual" ? "✓ Copied to Clipboard" : "✓ Copied! Opening AI..."}
     </button>
+    <div style={{fontSize: 11, color: "#888375", marginTop: 10, textAlign: "center", fontStyle: "italic"}}>
+        100% Private. Data is packaged locally and moved to your clipboard.
+    </div>
   </div>;
 }
 
