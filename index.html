@@ -284,8 +284,10 @@ function Settings(){
   const [gym, setGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
   const [skill, setSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
   
-  // NEW: Dynamic Custom Categories Builder
-  const [customCats, setCustomCats] = useLocalStorage("sys_custom_cats", []);
+  // FIX: Safety Parser to handle complex lists without crashing React
+  const [customCatsStr, setCustomCatsStr] = useLocalStorage("sys_custom_cats", "[]");
+  let customCats = [];
+  try { customCats = JSON.parse(customCatsStr); } catch(e) { customCats = []; }
 
   const exportData = () => {
     const allData = {};
@@ -316,15 +318,19 @@ function Settings(){
     reader.readAsText(file);
   };
 
-  // Logic to handle Add/Update/Delete of Custom Categories
   const addCategory = () => {
-    setCustomCats([...customCats, { id: Date.now(), name: "New Category", tags: "Item 1, Item 2" }]);
+    const newCats = [...customCats, { id: Date.now(), name: "New Category", tags: "Item 1, Item 2" }];
+    setCustomCatsStr(JSON.stringify(newCats));
   };
+  
   const updateCat = (id, field, value) => {
-    setCustomCats(customCats.map(c => c.id === id ? { ...c, [field]: value } : c));
+    const newCats = customCats.map(c => c.id === id ? { ...c, [field]: value } : c);
+    setCustomCatsStr(JSON.stringify(newCats));
   };
+  
   const deleteCat = (id) => {
-    setCustomCats(customCats.filter(c => c.id !== id));
+    const newCats = customCats.filter(c => c.id !== id);
+    setCustomCatsStr(JSON.stringify(newCats));
   };
   
   return <div>
@@ -353,7 +359,7 @@ function Settings(){
               value={c.name} 
               onChange={e => updateCat(c.id, "name", e.target.value)} 
               style={{fontWeight: "bold", border: "none", borderBottom: "1px solid #3C3489", background: "transparent", width: "70%", fontSize: 15, color: "#3C3489", outline: "none"}} 
-              placeholder="Category Name (e.g., Spirit)"
+              placeholder="Category Name"
             />
             <button onClick={() => deleteCat(c.id)} style={{color: "#d85a30", background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "bold"}}>❌ Delete</button>
           </div>
@@ -397,18 +403,17 @@ function Settings(){
 
 function App(){
   const [tab, setTab] = useState("activity");
-  const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6_final", false);
-  const [showWelcome, setShowWelcome] = useState(!hasVisited);
+  const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6_final", "false");
+  const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
   const [welcomeStep, setWelcomeStep] = useState(1);
   const [tempKey, setTempKey] = useState("");
 
   const hr = new Date().getHours();
-  // UPDATED GREETINGS TO ADDRESS THE USER AS "HUMAN"
   const greet = hr < 12 ? "Good morning, Human." : hr < 17 ? "Good afternoon, Human." : "Good evening, Human.";
   const today = new Date().toLocaleDateString("en-US", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
 
   const finishWelcome = () => {
-    setHasVisited(true);
+    setHasVisited("true");
     setShowWelcome(false);
   };
 
@@ -420,12 +425,10 @@ function App(){
   };
 
   return <div style={{maxWidth: 480, margin: "0 auto", paddingBottom: 90}}>
-    {/* STEP-BY-STEP ONBOARDING WIZARD */}
     {showWelcome && (
       <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
         <div className="card" style={{textAlign: "center", border: "2px solid #3C3489", width: "100%", maxWidth: 400, background: "#fff"}}>
           
-          {/* STEP 1: CHOOSE AI OR NO AI */}
           {welcomeStep === 1 && (
             <div>
               <h2 style={{color: "#3C3489", marginBottom: 15}}>Welcome, Human. 🚀</h2>
@@ -441,7 +444,6 @@ function App(){
             </div>
           )}
 
-          {/* STEP 2: API SETUP */}
           {welcomeStep === 2 && (
             <div>
               <h2 style={{color: "#3C3489", marginBottom: 15}}>🤖 Connect AI</h2>
@@ -450,7 +452,6 @@ function App(){
                 <b>Step 2:</b> Navigation: <b>Sign In &gt; Get API key &gt; Create API key</b><br/>
                 <b>Step 3:</b> Copy the key and paste it below.
                 
-                {/* UPDATED PRIVACY TEXT */}
                 <div style={{marginTop: 12, paddingTop: 10, borderTop: "1px solid #ccc", fontSize: 12, lineHeight: "1.5"}}>
                   <b style={{color: "#d85a30"}}>API Key Options:</b><br/>
                   • <b>Free Tier:</b> Good for insights. Standard Google terms apply (prompts may be processed to improve services).<br/>
@@ -469,7 +470,6 @@ function App(){
             </div>
           )}
 
-          {/* STEP 3: PRIVACY & DATA EXPORT */}
           {welcomeStep === 3 && (
             <div>
               <h2 style={{color: "#3C3489", marginBottom: 15}}>🛡️ 100% Private</h2>
@@ -489,14 +489,12 @@ function App(){
       </div>
     )}
 
-    {/* HEADER */}
     <div style={{background: "#1a1a2e", padding: "20px 16px 16px", borderRadius: "0 0 20px 20px", marginBottom: 16}}>
       <p style={{fontSize: 11, color: "#8888aa", letterSpacing: 2, marginBottom: 4}}>DAILY COMMAND CENTER</p>
       <p style={{fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 2}}>{greet}</p>
       <p style={{fontSize: 13, color: "#8888aa"}}>{today}</p>
     </div>
 
-    {/* TABS */}
     <div style={{padding: "0 12px"}}>
       <div style={{display: tab === "activity" ? "block" : "none"}}><Activity/></div>
       <div style={{display: tab === "finance" ? "block" : "none"}}><Finance/></div>
@@ -505,7 +503,6 @@ function App(){
       <div style={{display: tab === "settings" ? "block" : "none"}}><Settings/></div>
     </div>
 
-    {/* BOTTOM NAVIGATION */}
     <div className="nav">
       {TABS.map(t => <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
         <span style={{fontSize: 18, color: tab === t.id ? "#1a1a2e" : "#ccc"}}>{t.icon}</span>
