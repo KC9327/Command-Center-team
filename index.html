@@ -366,7 +366,8 @@ function App(){
   const [tempKey, setTempKey] = useState("");
 
   const hr = new Date().getHours();
-  const greet = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
+  // UPDATED GREETINGS TO ADDRESS THE USER AS "HUMAN"
+  const greet = hr < 12 ? "Good morning, Human." : hr < 17 ? "Good afternoon, Human." : "Good evening, Human.";
   const today = new Date().toLocaleDateString("en-US", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
 
   const finishWelcome = () => {
@@ -390,7 +391,7 @@ function App(){
           {/* STEP 1: CHOOSE AI OR NO AI */}
           {welcomeStep === 1 && (
             <div>
-              <h2 style={{color: "#3C3489", marginBottom: 15}}>Welcome, Team! 🚀</h2>
+              <h2 style={{color: "#3C3489", marginBottom: 15}}>Welcome, Human. 🚀</h2>
               <p style={{fontSize: 14, color: "#444", marginBottom: 20, lineHeight: "1.5"}}>
                 Your Daily Command Center is ready. Would you like to enable the <b>AI Daily Review</b> feature?
               </p>
@@ -403,7 +404,7 @@ function App(){
             </div>
           )}
 
-          {/* STEP 2: API SETUP (Only shows if Option 1 is clicked) */}
+          {/* STEP 2: API SETUP */}
           {welcomeStep === 2 && (
             <div>
               <h2 style={{color: "#3C3489", marginBottom: 15}}>🤖 Connect AI</h2>
@@ -412,10 +413,11 @@ function App(){
                 <b>Step 2:</b> Navigation: <b>Sign In &gt; Get API key &gt; Create API key</b><br/>
                 <b>Step 3:</b> Copy the key and paste it below.
                 
+                {/* UPDATED PRIVACY TEXT */}
                 <div style={{marginTop: 12, paddingTop: 10, borderTop: "1px solid #ccc", fontSize: 12, lineHeight: "1.5"}}>
-                  <b style={{color: "#d85a30"}}>Privacy & Billing Tiers:</b><br/>
-                  • <b>Free Tier:</b> Google may use your app entries to train its AI models.<br/>
-                  • <b>Paid Tier (Pay-as-you-go):</b> 100% Private (no training). Costs less than ₹120/month for daily usage.
+                  <b style={{color: "#d85a30"}}>API Key Options:</b><br/>
+                  • <b>Free Tier:</b> Good for insights. Standard Google terms apply (prompts may be processed to improve services).<br/>
+                  • <b>Paid Tier (Pay-as-you-go):</b> Maximum Privacy. Google guarantees your prompts are never used for training. Costs &lt; ₹120/month.
                 </div>
               </div>
               <input 
@@ -435,7 +437,7 @@ function App(){
             <div>
               <h2 style={{color: "#3C3489", marginBottom: 15}}>🛡️ 100% Private</h2>
               <p style={{fontSize: 14, color: "#444", marginBottom: 15, lineHeight: "1.5"}}>
-                <b>Your data never leaves this device.</b> Nobody else can see your entries.
+                <b>Your data never leaves this device, Human.</b> Nobody else can see your entries.
               </p>
               <div style={{background: "#F0EEF8", padding: 12, borderRadius: 8, marginBottom: 20, textAlign: "left"}}>
                 <p style={{fontSize: 12, color: "#3C3489", margin: 0, lineHeight: "1.5"}}>
