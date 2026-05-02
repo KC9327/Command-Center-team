@@ -91,45 +91,98 @@ function Dur({h,m,sh,sm}){
   </div>;
 }
 
-function AIBtn({prompt,label}){
-  const [load,setLoad]=useState(false);
-  const [res,setRes]=useState("");
-  const [apiKey, setApiKey] = useLocalStorage("gemini_api_key", "");
-  const [ctx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Be direct and warm.");
+function AIBtn({prompt, label}){
+  const [status, setStatus] = useState("idle");
+  const [aiModel, setAiModel] = useLocalStorage("pref_ai_model", "chatgpt");
+  const [masterCtx] = useLocalStorage("sys_ctx", "");
+  const [yesterdayMem] = useLocalStorage("yesterday_mem", "");
 
-  async function run(attempt = 1){
-    let currentKey = apiKey;
-    if(!currentKey){
-      currentKey = window.prompt("Please enter your Google Gemini API Key.\n(Saved securely to this device's memory):");
-      if(!currentKey) return; 
-      setApiKey(currentKey);
+  const aiLinks = {
+    chatgpt: "https://chatgpt.com/",
+    gemini: "https://gemini.google.com/",
+    claude: "https://claude.ai/",
+    perplexity: "https://www.perplexity.ai/",
+    grok: "https://grok.com/",
+    deepseek: "https://chat.deepseek.com/"
+  };
+
+  const aiNames = {
+    chatgpt: "ChatGPT",
+    gemini: "Gemini",
+    claude: "Claude",
+    perplexity: "Perplexity",
+    grok: "Grok AI",
+    deepseek: "DeepSeek"
+  };
+
+  const handleBridge = async () => {
+    try {
+      setStatus("copying");
+      
+      const finalPrompt = `
+IDENTITY & LONG-TERM CONTEXT:
+${masterCtx}
+
+PREVIOUS STATE (YESTERDAY'S MEMORY):
+${yesterdayMem || "No previous memory provided."}
+
+TODAY'S LOG DATA:
+${prompt}
+
+INSTRUCTIONS:
+1. Provide the analysis requested (${label}).
+2. CRITICAL: At the end of your response, provide a section titled "MEMORY TOKEN". 
+   Write a 2-3 sentence summary of my current state, progress, and what I need to remember for tomorrow.
+      `.trim();
+
+      await navigator.clipboard.writeText(finalPrompt);
+      setStatus("copied");
+
+      setTimeout(() => {
+        window.open(aiLinks[aiModel], "_blank");
+        setStatus("idle");
+      }, 1500);
+
+    } catch (err) {
+      alert("Clipboard access denied.");
+      setStatus("idle");
     }
-    setLoad(true);
-    if (attempt === 1) setRes("");
-    else setRes("Google servers busy. Auto-retrying... (Attempt " + attempt + " of 3)");
+  };
 
-    try{
-      const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+currentKey,{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({contents: [{ parts: [{ text: ctx+"\n\n"+prompt }] }]})
-      });
-      const d=await r.json();
-      if(d.error){
-        if((d.error.code === 503 || d.error.message.includes("demand")) && attempt < 3) {
-            setTimeout(() => run(attempt + 1), 3000); return; 
-        }
-        setRes("API Error: "+d.error.message);
-        if(d.error.code === 400 || d.error.code === 403) setApiKey(""); 
-        setLoad(false);
-      } else {
-        setRes(d.candidates[0].content.parts[0].text);
-        setLoad(false);
-      }
-    }catch(e){setRes("Network Error."); setLoad(false);}
-  }
-  return <div style={{marginTop:20}}>
-    <button onClick={()=>run(1)} disabled={load} className="pbtn" style={{background:load?"#888375":"#232528"}}>{load?"Analysing Notes...":"✦ "+label}</button>
-    {res&&<div className="ai">{res}</div>}
+  return <div style={{marginTop:24, padding: "16px", background: "#EBE7DD", border: "1px dashed #C4BEAD", borderRadius: "4px"}}>
+    <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12}}>
+      <span style={{fontSize: 11, color: "#5A544A", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1}}>Select Intelligence:</span>
+      <select 
+        value={aiModel} 
+        onChange={(e) => setAiModel(e.target.value)}
+        style={{padding: "6px 12px", background: "#F8F7F2", border: "1px solid #C4BEAD", borderRadius: "4px", fontFamily: "'Merriweather', serif", fontSize: 13, color: "#232528", outline: "none", cursor: "pointer"}}
+      >
+        <option value="chatgpt">ChatGPT</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="claude">Claude</option>
+        <option value="perplexity">Perplexity</option>
+        <option value="grok">Grok AI</option>
+        <option value="deepseek">DeepSeek</option>
+      </select>
+    </div>
+
+    <button 
+      onClick={handleBridge} 
+      disabled={status !== "idle"} 
+      className="pbtn" 
+      style={{
+        background: status === "copied" ? "#3A4533" : "#232528", 
+        transition: "background 0.3s ease",
+        marginTop: 0
+      }}
+    >
+      {status === "idle" ? "✦ " + label + " via " + aiNames[aiModel] : 
+       status === "copying" ? "Packaging Memory..." : 
+       "✓ Ready! Opening " + aiNames[aiModel] + "..."}
+    </button>
+    <div style={{fontSize: 12, color: "#888375", marginTop: 12, fontStyle: "italic", textAlign: "center", lineHeight: 1.5}}>
+      <b>Memory Loop Active:</b> Your clipboard contains your Identity, Yesterday's Summary, and Today's Logs. Just <b>Paste (Ctrl+V)</b> in the new tab.
+    </div>
   </div>;
 }
 
@@ -182,16 +235,21 @@ function Activity(){
       </div>
     </div>
 
-    <div className="card">
-      <span className="lbl">Start Time</span>
-      <input type="time" value={time} onChange={e=>setTime(e.target.value)} className="inp" style={{width:"auto"}}/>
-      <span className="lbl">Journal Entry</span>
-      <textarea rows={2} value={text} onChange={e=>setText(e.target.value)} placeholder="Chronicle this activity..." className="inp"/>
-      
-      <span className="lbl" style={{marginTop: 8}}>Standard Categories</span>
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:6}}>
-        {defCats.map(c=><Tag key={c.n} label={c.n} sel={cat===c.n} onClick={()=>setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br}/>)}
-      </div>
+    <div className="card" style={{border: "1px solid #7A2A3B", background: "#F0EBEB"}}>
+      <span className="lbl" style={{color: "#7A2A3B"}}>Yesterday's Memory Token</span>
+      <textarea 
+        rows={2} 
+        value={window.localStorage.getItem("yesterday_mem") ? JSON.parse(window.localStorage.getItem("yesterday_mem")) : ""} 
+        onChange={(e) => {
+          const val = e.target.value;
+          window.localStorage.setItem("yesterday_mem", JSON.stringify(val));
+          window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: "yesterday_mem", val } }));
+        }} 
+        placeholder="Paste the 'Memory Token' from yesterday's AI chat here..." 
+        className="inp"
+        style={{marginBottom: 0, fontSize: 13}}
+      />
+    </div>
 
       {customCats.map(cc => {
          const items = cc.tags.split(",").map(t => t.trim()).filter(t=>t);
