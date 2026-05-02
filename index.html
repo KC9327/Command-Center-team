@@ -502,7 +502,7 @@ function App(){
       </div>
     )}
 
-    {/* APP NAME & GREETING */}
+    {/* MAIN HEADER: Only place for the greeting */}
     <div style={{padding: "40px 0 20px", textAlign:"left"}}>
       <h4 style={{fontSize: 12, color: "#5E5CE6", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8}}>My Chronicles</h4>
       <h1 style={{fontSize: 34, marginBottom: 4}}>{greet}, Human.</h1>
@@ -511,12 +511,10 @@ function App(){
       </p>
     </div>
 
+    {/* CONTENT: Redundant greeting removed from here */}
     <div className="tab-content" key={tab}>
       {tabs.map(t => (
         <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
-          <div style={{marginBottom: 10, display: "flex", alignItems: "center", gap: 8}}>
-             <span style={{fontSize: 12, color: "#8E8E93", fontWeight: 700}}>{greet}, Human.</span>
-          </div>
           {t.id === "activity" ? <Activity/> : 
            t.id === "finance" ? <Finance/> :
            t.id === "gym" ? <Gym/> : 
