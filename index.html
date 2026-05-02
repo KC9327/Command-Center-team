@@ -25,7 +25,7 @@ h1, h2, h3, h4 {font-family:'Playfair Display',serif; color:#7A2A3B; letter-spac
 .dbtn{float:right;background:none;border:none;color:#A8A291;font-size:18px;cursor:pointer}
 .nav{position:fixed;bottom:0;left:0;right:0;background:#F8F7F2;border-top:1px solid #D9D4C5;display:flex;padding:10px 4px 16px;overflow-x:auto;box-shadow:0 -2px 10px rgba(0,0,0,0.03);}
 .nb{min-width:60px;flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;padding:6px 2px}
-.ai{background:#232528;border-radius:6px;padding:18px;color:#F8F7F2;font-size:14px;line-height:1.8;white-space:pre-wrap;margin-top:12px;border-left:4px solid #7A2A3B;}
+.ai-bridge{margin-top:24px; padding: 16px; background: #EBE7DD; border: 1px dashed #C4BEAD; borderRadius: 4px;}
 </style>
 </head>
 <body>
@@ -33,7 +33,6 @@ h1, h2, h3, h4 {font-family:'Playfair Display',serif; color:#7A2A3B; letter-spac
 <script type="text/babel" data-presets="react">
 const {useState, useEffect} = React;
 
-// THE ENGINE: Instant Memory Sync across all tabs
 function useLocalStorage(key, init) {
   const [val, setVal] = useState(() => {
     try {
@@ -87,10 +86,10 @@ function Dur({h,m,sh,sm}){
         <button className="sbtn" onClick={()=>sm(Math.min(55,m+5))}>+</button>
       </div>
     </div>
-    <span style={{fontSize:14,color:"#5A544A",marginTop:18,fontStyle:"italic"}}>{h>0?h+"h ":""}{m}m</span>
   </div>;
 }
 
+// UNIVERSAL BRIDGE: Works on all tabs
 function AIBtn({prompt, label}){
   const [status, setStatus] = useState("idle");
   const [aiModel, setAiModel] = useLocalStorage("pref_ai_model", "chatgpt");
@@ -98,204 +97,87 @@ function AIBtn({prompt, label}){
   const [yesterdayMem] = useLocalStorage("yesterday_mem", "");
 
   const aiLinks = {
-    chatgpt: "https://chatgpt.com/",
-    gemini: "https://gemini.google.com/",
-    claude: "https://claude.ai/",
-    perplexity: "https://www.perplexity.ai/",
-    grok: "https://grok.com/",
-    deepseek: "https://chat.deepseek.com/"
-  };
-
-  const aiNames = {
-    chatgpt: "ChatGPT",
-    gemini: "Gemini",
-    claude: "Claude",
-    perplexity: "Perplexity",
-    grok: "Grok AI",
-    deepseek: "DeepSeek"
+    chatgpt: "https://chatgpt.com/", gemini: "https://gemini.google.com/", 
+    claude: "https://claude.ai/", perplexity: "https://www.perplexity.ai/",
+    grok: "https://grok.com/", deepseek: "https://chat.deepseek.com/", 
+    manual: null 
   };
 
   const handleBridge = async () => {
     try {
       setStatus("copying");
+      const finalPrompt = `IDENTITY: ${masterCtx}\n\nPREVIOUS STATE: ${yesterdayMem}\n\nTODAY'S DATA:\n${prompt}\n\nINSTRUCTIONS: 1. Provide ${label}. 2. End with a 2-sentence "MEMORY TOKEN" for tomorrow.`;
       
-      const finalPrompt = `
-IDENTITY & LONG-TERM CONTEXT:
-${masterCtx}
-
-PREVIOUS STATE (YESTERDAY'S MEMORY):
-${yesterdayMem || "No previous memory provided."}
-
-TODAY'S LOG DATA:
-${prompt}
-
-INSTRUCTIONS:
-1. Provide the analysis requested (${label}).
-2. CRITICAL: At the end of your response, provide a section titled "MEMORY TOKEN". 
-   Write a 2-3 sentence summary of my current state, progress, and what I need to remember for tomorrow.
-      `.trim();
-
-      await navigator.clipboard.writeText(finalPrompt);
+      // Robust cross-platform copy
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(finalPrompt);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = finalPrompt; document.body.appendChild(textArea);
+        textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea);
+      }
+      
       setStatus("copied");
-
       setTimeout(() => {
-        window.open(aiLinks[aiModel], "_blank");
+        if(aiLinks[aiModel]) window.open(aiLinks[aiModel], "_blank");
         setStatus("idle");
       }, 1500);
-
-    } catch (err) {
-      alert("Clipboard access denied.");
-      setStatus("idle");
-    }
+    } catch (err) { setStatus("idle"); alert("Clipboard error. Please try again."); }
   };
 
-  return <div style={{marginTop:24, padding: "16px", background: "#EBE7DD", border: "1px dashed #C4BEAD", borderRadius: "4px"}}>
+  return <div className="ai-bridge">
     <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12}}>
-      <span style={{fontSize: 11, color: "#5A544A", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1}}>Select Intelligence:</span>
-      <select 
-        value={aiModel} 
-        onChange={(e) => setAiModel(e.target.value)}
-        style={{padding: "6px 12px", background: "#F8F7F2", border: "1px solid #C4BEAD", borderRadius: "4px", fontFamily: "'Merriweather', serif", fontSize: 13, color: "#232528", outline: "none", cursor: "pointer"}}
-      >
-        <option value="chatgpt">ChatGPT</option>
-        <option value="gemini">Google Gemini</option>
-        <option value="claude">Claude</option>
-        <option value="perplexity">Perplexity</option>
-        <option value="grok">Grok AI</option>
-        <option value="deepseek">DeepSeek</option>
+      <span className="lbl" style={{marginBottom:0}}>Intelligence Hub</span>
+      <select value={aiModel} onChange={(e) => setAiModel(e.target.value)} style={{padding: "4px 8px", background: "#F8F7F2", border: "1px solid #C4BEAD", borderRadius: "4px", fontFamily: "'Merriweather', serif", fontSize: 12}}>
+        <option value="chatgpt">ChatGPT</option><option value="gemini">Gemini</option>
+        <option value="claude">Claude</option><option value="perplexity">Perplexity</option>
+        <option value="grok">Grok AI</option><option value="deepseek">DeepSeek</option>
+        <option value="manual">Manual Copy Only</option>
       </select>
     </div>
-
-    <button 
-      onClick={handleBridge} 
-      disabled={status !== "idle"} 
-      className="pbtn" 
-      style={{
-        background: status === "copied" ? "#3A4533" : "#232528", 
-        transition: "background 0.3s ease",
-        marginTop: 0
-      }}
-    >
-      {status === "idle" ? "✦ " + label + " via " + aiNames[aiModel] : 
-       status === "copying" ? "Packaging Memory..." : 
-       "✓ Ready! Opening " + aiNames[aiModel] + "..."}
+    <button onClick={handleBridge} disabled={status !== "idle"} className="pbtn" style={{background: status === "copied" ? "#3A4533" : "#232528", marginTop: 0}}>
+      {status === "idle" ? "✦ " + label : status === "copying" ? "Packaging..." : "✓ Copied! Opening AI..."}
     </button>
-    <div style={{fontSize: 12, color: "#888375", marginTop: 12, fontStyle: "italic", textAlign: "center", lineHeight: 1.5}}>
-      <b>Memory Loop Active:</b> Your clipboard contains your Identity, Yesterday's Summary, and Today's Logs. Just <b>Paste (Ctrl+V)</b> in the new tab.
-    </div>
   </div>;
 }
 
 function Activity(){
   const [entries,setEntries]=useLocalStorage("act_entries",[]);
-  
   const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Commute, Break, Admin");
-  const actS = typeof actStr === "string" ? actStr : "Deep work";
-  const defCats = actS.split(",").map((c,i)=>({n:c.trim(), ...PALETTE[i%PALETTE.length]}));
-  
-  const [customCatsStr] = useLocalStorage("sys_custom_cats", "[]");
-  let customCats = [];
-  try { 
-    const parsed = JSON.parse(customCatsStr); 
-    if(Array.isArray(parsed)) customCats = parsed;
-  } catch(e) {}
-
-  const ALL_CATS = [...defCats];
-  let colorIndex = defCats.length;
-  customCats.forEach(cc => {
-     const items = cc.tags.split(",").map(t => t.trim()).filter(t => t);
-     items.forEach(item => {
-         ALL_CATS.push({ n: item, ...PALETTE[colorIndex % PALETTE.length] });
-         colorIndex++;
-     });
-  });
-
+  const defCats = actStr.split(",").map((c,i)=>({n:c.trim(), ...PALETTE[i%PALETTE.length]}));
   const [text,setText]=useState(""); const [cat,setCat]=useState(null);
   const [h,setH]=useState(0);const [m,setM]=useState(30);
   const [time,setTime]=useState(()=>{const n=new Date();return String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");});
   
   function add(){
-    if(!text.trim()||!cat)return alert("Fill description and category");
+    if(!text.trim()||!cat)return alert("Fill info");
     setEntries([...entries,{id:Date.now(),text,cat,mins:h*60+m,time}]);
     setText("");setCat(null);setH(0);setM(30);
   }
   const total=entries.reduce((s,e)=>s+e.mins,0);
-  const grp={};entries.forEach(e=>{grp[e.cat]=(grp[e.cat]||0)+e.mins;});
-  const log=entries.map(e=>`${e.time} | ${e.cat} | ${Math.floor(e.mins/60)}h${e.mins%60}m | ${e.text}`).join("\n");
+  const log=entries.map(e=>`${e.time} | ${e.cat} | ${e.mins}m | ${e.text}`).join("\n");
   
   return <div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
       <div style={{background:"#232528",borderRadius:8,padding:16,color:"#F8F7F2",textAlign:"center",borderBottom:"4px solid #7A2A3B"}}>
-        <div style={{fontSize:28,fontFamily:"'Playfair Display',serif"}}>{entries.length}</div>
-        <div style={{fontSize:11,color:"#C4BEAD",marginTop:4,letterSpacing:1}}>ENTRIES</div>
+        <div style={{fontSize:28,fontFamily:"'Playfair Display',serif"}}>{entries.length}</div><span className="lbl" style={{color:"#C4BEAD"}}>Entries</span>
       </div>
       <div style={{background:"#232528",borderRadius:8,padding:16,color:"#F8F7F2",textAlign:"center",borderBottom:"4px solid #7A2A3B"}}>
-        <div style={{fontSize:24,fontFamily:"'Playfair Display',serif",marginTop:2}}>{Math.floor(total/60)}h {total%60}m</div>
-        <div style={{fontSize:11,color:"#C4BEAD",marginTop:4,letterSpacing:1}}>TRACKED</div>
+        <div style={{fontSize:24,fontFamily:"'Playfair Display',serif",marginTop:2}}>{Math.floor(total/60)}h {total%60}m</div><span className="lbl" style={{color:"#C4BEAD"}}>Tracked</span>
       </div>
     </div>
-
-    <div className="card" style={{border: "1px solid #7A2A3B", background: "#F0EBEB"}}>
-      <span className="lbl" style={{color: "#7A2A3B"}}>Yesterday's Memory Token</span>
-      <textarea 
-        rows={2} 
-        value={window.localStorage.getItem("yesterday_mem") ? JSON.parse(window.localStorage.getItem("yesterday_mem")) : ""} 
-        onChange={(e) => {
-          const val = e.target.value;
-          window.localStorage.setItem("yesterday_mem", JSON.stringify(val));
-          window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: "yesterday_mem", val } }));
-        }} 
-        placeholder="Paste the 'Memory Token' from yesterday's AI chat here..." 
-        className="inp"
-        style={{marginBottom: 0, fontSize: 13}}
-      />
+    <div className="card">
+      <span className="lbl">New Entry</span>
+      <input type="time" value={time} onChange={e=>setTime(e.target.value)} className="inp" style={{width:"auto"}}/>
+      <textarea rows={2} value={text} onChange={e=>setText(e.target.value)} placeholder="What happened?" className="inp"/>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:6}}>{defCats.map(c=><Tag key={c.n} label={c.n} sel={cat===c.n} onClick={()=>setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br}/>)}</div>
+      <Dur h={h} m={m} sh={setH} sm={setM}/><button onClick={add} className="pbtn" style={{background:"#232528"}}>+ Log</button>
     </div>
-
-      {customCats.map(cc => {
-         const items = cc.tags.split(",").map(t => t.trim()).filter(t=>t);
-         if(items.length === 0) return null;
-         return (
-            <div key={cc.id} style={{marginTop: 12}}>
-              <span className="lbl" style={{color: "#7A2A3B"}}>{cc.name}</span>
-              <div style={{display:"flex",flexWrap:"wrap",marginBottom:6}}>
-                {items.map(item => {
-                   const tCat = ALL_CATS.find(x => x.n === item);
-                   return <Tag key={item} label={item} sel={cat===item} onClick={()=>setCat(item)} bg={tCat?.bg} tx={tCat?.tx} br={tCat?.br}/>
-                })}
-              </div>
-            </div>
-         );
-      })}
-
-      <div style={{marginTop: 16}}>
-        <span className="lbl">Duration</span>
-        <Dur h={h} m={m} sh={setH} sm={setM}/>
-      </div>
-      <button onClick={add} className="pbtn" style={{background:"#232528"}}>+ Log Entry</button>
-    </div>
-
-    {entries.length>0&&<>
-      <div className="card">
-        <span className="lbl">Time Breakdown</span>
-        {Object.entries(grp).sort((a,b)=>b[1]-a[1]).map(([c,mins])=>{
-          const ct=ALL_CATS.find(x=>x.n===c);
-          return <div key={c} style={{marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:14,color:"#000"}}>{c}</span><span style={{fontSize:13,color:"#5A544A",fontStyle:"italic"}}>{Math.floor(mins/60)}h {mins%60}m</span></div>
-            <div style={{height:4,background:"#EBE7DD",borderRadius:2}}><div style={{height:4,width:Math.round((mins/total)*100)+"%",background:ct?.br||"#7A2A3B",borderRadius:2}}/></div>
-          </div>;
-        })}
-      </div>
-      {[...entries].reverse().map(e=>{
-        const c=ALL_CATS.find(x=>x.n===e.cat);
-        return <div key={e.id} className="card" style={{borderLeft:"4px solid "+(c?.br||"#7A2A3B")}}>
-          <button className="dbtn" onClick={()=>setEntries(entries.filter(x=>x.id!==e.id))}>×</button>
-          <span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:c?.bg||"#EBE7DD",color:c?.tx||"#000",fontWeight:700,textTransform:"uppercase"}}>{e.cat}</span>
-          <div style={{fontSize:15,color:"#000",marginTop:10,lineHeight:1.6}}>{e.text}</div>
-          <div style={{fontSize:12,color:"#888375",marginTop:8,fontStyle:"italic",fontFamily:"Georgia,serif"}}>{e.time} · {Math.floor(e.mins/60)}h {e.mins%60}m</div>
-        </div>;
-      })}
-      <AIBtn label="Review My Chronicles" prompt={"Review this day log:\n"+log+"\n\nTotal: "+Math.floor(total/60)+"h "+total%60+"m\n\nGive: 1)Identity statement 2)Time lost 3)Wins 4)Alignment check 5)3 improvements for tomorrow 6)CEO mantra"}/>
-    </>}
+    {[...entries].reverse().map(e=><div key={e.id} className="card" style={{borderLeft:"4px solid #7A2A3B"}}>
+      <button className="dbtn" onClick={()=>setEntries(entries.filter(x=>x.id!==e.id))}>×</button>
+      <span style={{fontSize:11,fontWeight:700}}>{e.cat}</span><div style={{fontSize:15,marginTop:8}}>{e.text}</div>
+    </div>)}
+    {entries.length>0 && <AIBtn label="Daily Review" prompt={log}/>}
   </div>;
 }
 
@@ -303,116 +185,116 @@ function Finance(){
   const [expenses,setExpenses]=useLocalStorage("fin_exp",[]); const [invs,setInvs]=useLocalStorage("fin_inv",[]);
   const [expStr]=useLocalStorage("sys_exp","Food, Transport, Bills, Family, Fun, Other");
   const [invStr]=useLocalStorage("sys_inv","Skills, Health, Savings, Other");
-  const ECATS = (typeof expStr === "string" ? expStr : "").split(",").map(s=>s.trim()).filter(x=>x);
-  const ICATS = (typeof invStr === "string" ? invStr : "").split(",").map(s=>s.trim()).filter(x=>x);
-
   const [tab,setTab]=useState("exp");
   const [ed,setEd]=useState("");const [ea,setEa]=useState("");const [ec,setEc]=useState(null);
-  const [id,setId]=useState("");const [ia,setIa]=useState("");const [ic,setIc]=useState(null);
-  const te=expenses.reduce((s,e)=>s+parseFloat(e.a||0),0); const ti=invs.reduce((s,e)=>s+parseFloat(e.a||0),0);
+  const te=expenses.reduce((s,e)=>s+parseFloat(e.a||0),0);
+  const log="Expenses:\n"+expenses.map(e=>`- ${e.c}: ${e.d} ₹${e.a}`).join("\n");
   
-  function addE(){if(!ed||!ea||!ec)return alert("Fill all fields");setExpenses([...expenses,{id:Date.now(),d:ed,a:ea,c:ec}]);setEd("");setEa("");setEc(null);}
-  function addI(){if(!id||!ia||!ic)return alert("Fill all fields");setInvs([...invs,{id:Date.now(),d:id,a:ia,c:ic}]);setId("");setIa("");setIc(null);}
-  const sum="Expenses:\n"+expenses.map(e=>"- "+e.c+": "+e.d+" Rs."+e.a).join("\n")+"\nInvestments:\n"+invs.map(e=>"- "+e.c+": "+e.d+" Rs."+e.a).join("\n");
-  
+  function addE(){setExpenses([...expenses,{id:Date.now(),d:ed,a:ea,c:ec}]);setEd("");setEa("");setEc(null);}
+
   return <div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
-      <div style={{background:"#F0EBEB",borderRadius:8,padding:16,border:"1px solid #B06373",textAlign:"center"}}>
-        <div style={{fontSize:24,fontFamily:"'Playfair Display',serif",color:"#7A2A3B",fontWeight:700}}>₹{te.toFixed(0)}</div>
-        <div style={{fontSize:11,color:"#7A2A3B",marginTop:4,letterSpacing:1,fontWeight:700}}>SPENT</div>
-      </div>
-      <div style={{background:"#EBECE7",borderRadius:8,padding:16,border:"1px solid #69785D",textAlign:"center"}}>
-        <div style={{fontSize:24,fontFamily:"'Playfair Display',serif",color:"#3A4533",fontWeight:700}}>₹{ti.toFixed(0)}</div>
-        <div style={{fontSize:11,color:"#3A4533",marginTop:4,letterSpacing:1,fontWeight:700}}>INVESTED</div>
-      </div>
-    </div>
-    <div style={{display:"flex",gap:8,marginBottom:14}}>
-      {["exp","inv"].map(t=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"10px 0",borderRadius:4,border:tab===t?"1px solid #232528":"1px solid #C4BEAD",background:tab===t?"#232528":"#F8F7F2",color:tab===t?"#F8F7F2":"#5A544A",fontFamily:"'Merriweather',serif",fontSize:13,cursor:"pointer",fontWeight:tab===t?700:400,letterSpacing:1,textTransform:"uppercase"}}>{t==="exp"?"Expenses":"Investments"}</button>)}
-    </div>
+    <div className="card" style={{textAlign:"center"}}><div style={{fontSize:24,fontWeight:700}}>₹{te} Spent</div></div>
     <div className="card">
-      <span className="lbl">Category</span>
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{tab==="exp"?ECATS.map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>):ICATS.map(c=><Tag key={c} label={c} sel={ic===c} onClick={()=>setIc(c)} bg="#EBECE7" tx="#3A4533" br="#69785D"/>)}</div>
-      <span className="lbl">Description</span>
-      <input value={tab==="exp"?ed:id} onChange={e=>tab==="exp"?setEd(e.target.value):setId(e.target.value)} placeholder="e.g. Groceries" className="inp"/>
-      <span className="lbl">Amount</span>
-      <input type="number" value={tab==="exp"?ea:ia} onChange={e=>tab==="exp"?setEa(e.target.value):setIa(e.target.value)} placeholder="0" className="inp" style={{width:160, fontFamily:"'Playfair Display',serif", fontSize:18}}/>
-      <button onClick={tab==="exp"?addE:addI} className="pbtn" style={{background:tab==="exp"?"#7A2A3B":"#3A4533"}}>+ Log {tab==="exp"?"Expense":"Investment"}</button>
-      
-      <div style={{marginTop: 16}}>
-      {(tab==="exp"?expenses:invs).map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #EBE7DD"}}>
-        <div><span style={{fontSize:14,color:"#000"}}>{e.d}</span><span style={{fontSize:10,color:"#888375",marginLeft:8,textTransform:"uppercase",fontWeight:700}}>{e.c}</span></div>
-        <div style={{display:"flex",alignItems:"center",gap:12}}><span style={{fontSize:16,fontFamily:"'Playfair Display',serif",fontWeight:700,color:tab==="exp"?"#7A2A3B":"#3A4533"}}>₹{e.a}</span><button className="dbtn" onClick={()=>tab==="exp"?setExpenses(expenses.filter(x=>x.id!==e.id)):setInvs(invs.filter(x=>x.id!==e.id))}>×</button></div>
-      </div>)}
-      </div>
+      <span className="lbl">Log Money</span>
+      <input value={ed} onChange={e=>setEd(e.target.value)} placeholder="Description" className="inp"/>
+      <input type="number" value={ea} onChange={e=>setEa(e.target.value)} placeholder="Amount" className="inp"/>
+      <div style={{display:"flex",flexWrap:"wrap"}}>{expStr.split(",").map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>)}</div>
+      <button onClick={addE} className="pbtn" style={{background:"#7A2A3B"}}>+ Add Expense</button>
     </div>
-    {(expenses.length>0||invs.length>0)&&<AIBtn label="Ledger Analysis" prompt={"Analyse finances:\n"+sum+"\n\nGive: 1)Spending pattern 2)Goal alignment 3)One thing to cut 4)Tip for tomorrow"}/>}
+    {expenses.length>0 && <AIBtn label="Finance Check" prompt={log}/>}
   </div>;
 }
 
 function Gym(){
-  const [gymStr]=useLocalStorage("sys_gym","Push, Pull, Legs, Core, Cardio, Rest");
-  const MUSCLES = (typeof gymStr === "string" ? gymStr : "").split(",").map(s=>s.trim()).filter(x=>x);
-  const [muscle,setMuscle]=useLocalStorage("gym_m",null); const [energy,setEnergy]=useLocalStorage("gym_e",null);
-  const [exs,setExs]=useLocalStorage("gym_exs",[]); const [notes,setNotes]=useLocalStorage("gym_n","");
-  const [en,setEn]=useState("");const [es,setEs]=useState("");const [er,setEr]=useState("");const [ew,setEw]=useState("");
-  const [h,setH]=useLocalStorage("gym_h",0);const [m,setM]=useLocalStorage("gym_min",45);
-  function addEx(){if(!en.trim())return;setExs([...exs,{id:Date.now(),n:en,s:es,r:er,w:ew}]);setEn("");setEs("");setEr("");setEw("");}
+  const [exs,setExs]=useLocalStorage("gym_exs",[]); const [h,setH]=useState(0);const [m,setM]=useState(45);
+  const [en,setEn]=useState("");
+  function add(){setExs([...exs,{id:Date.now(),n:en}]);setEn("");}
+  const log="Workout:\n"+exs.map(e=>`- ${e.n}`).join("\n");
   return <div>
-    <div className="card">
-      <span className="lbl">Training Focus</span>
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:16}}>{MUSCLES.map(g=><Tag key={g} label={g} sel={muscle===g} onClick={()=>setMuscle(g)} bg="#EBECE7" tx="#3A4533" br="#69785D"/>)}</div>
-      <span className="lbl">Energy Levels</span>
-      <div style={{display:"flex",gap:8,marginBottom:16}}>{["High","Medium","Low"].map(e=><button key={e} onClick={()=>setEnergy(e)} style={{flex:1,padding:"10px 0",borderRadius:4,border:energy===e?"1px solid #69785D":"1px solid #C4BEAD",background:energy===e?"#EBECE7":"#F8F7F2",color:energy===e?"#3A4533":"#5A544A",fontFamily:"'Merriweather',serif",fontSize:13,cursor:"pointer",fontWeight:energy===e?700:400}}>{e}</button>)}</div>
-      <span className="lbl">Duration</span><Dur h={h} m={m} sh={setH} sm={setM}/>
-    </div>
-    <div className="card">
-      <span className="lbl">Log Movement</span>
-      <input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise Name" className="inp"/>
-      <div style={{display:"flex",gap:10}}><input value={es} onChange={e=>setEs(e.target.value)} placeholder="Sets" className="inp"/><input value={er} onChange={e=>setEr(e.target.value)} placeholder="Reps" className="inp"/><input value={ew} onChange={e=>setEw(e.target.value)} placeholder="Weight" className="inp"/></div>
-      <button onClick={addEx} className="pbtn" style={{background:"#3A4533"}}>+ Add Movement</button>
-      
-      <div style={{marginTop:16}}>
-      {exs.map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid #EBE7DD"}}><span style={{fontSize:14,color:"#000"}}>{e.n}</span><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:14,color:"#3A4533",fontFamily:"'Playfair Display',serif",fontWeight:700}}>{e.s} × {e.r} @ {e.w}</span><button className="dbtn" onClick={()=>setExs(exs.filter(x=>x.id!==e.id))}>×</button></div></div>)}
-      </div>
-    </div>
-    <div className="card"><span className="lbl">Physical Notes</span><textarea rows={3} value={notes} onChange={e=>setNotes(e.target.value)} className="inp" placeholder="Record form, fatigue, or milestones..."/></div>
-    {(muscle||exs.length>0)&&<AIBtn label="Assess Training" prompt={"Analyse gym session:\nFocus: "+muscle+"\nEnergy: "+energy+"\n"+exs.map(e=>"- "+e.n+": "+e.s+"x"+e.r+"@"+e.w).join("\n")+"\nNotes: "+notes+"\n\nGive: 1)Assessment 2)Form tip 3)Recovery 4)Next target 5)Motivation"}/>}
+    <div className="card"><span className="lbl">Training</span><input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise" className="inp"/><button onClick={add} className="pbtn" style={{background:"#3A4533"}}>+ Add</button></div>
+    {exs.length>0 && <AIBtn label="Assess Training" prompt={log}/>}
   </div>;
 }
 
 function Skills(){
-  const [skillStr]=useLocalStorage("sys_skill","Design, Coding, Marketing, Reading");
-  const SUBJECTS = (typeof skillStr === "string" ? skillStr : "").split(",").map(s=>s.trim()).filter(x=>x);
-  const [sub,setSub]=useLocalStorage("sk_s",null); const [energy,setEnergy]=useLocalStorage("sk_e",null);
-  const [topic,setTopic]=useLocalStorage("sk_t",""); const [learned,setLearned]=useLocalStorage("sk_l","");
-  const [struggle,setStruggle]=useLocalStorage("sk_st",""); const [progress,setProgress]=useLocalStorage("sk_p","");
-  const [h,setH]=useLocalStorage("sk_h",0);const [m,setM]=useLocalStorage("sk_m",50);
-  return <div>
-    <div className="card">
-      <span className="lbl">Area of Study</span>
-      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>{SUBJECTS.map(s=><Tag key={s} label={s} sel={sub===s} onClick={()=>setSub(s)} bg="#E8ECEF" tx="#2A3B4C" br="#58718A"/>)}</div>
-      <span className="lbl">Mental Energy</span>
-      <div style={{display:"flex",gap:8,marginBottom:16}}>{["High","Medium","Low"].map(e=><button key={e} onClick={()=>setEnergy(e)} style={{flex:1,padding:"10px 0",borderRadius:4,border:energy===e?"1px solid #58718A":"1px solid #C4BEAD",background:energy===e?"#E8ECEF":"#F8F7F2",color:energy===e?"#2A3B4C":"#5A544A",fontFamily:"'Merriweather',serif",fontSize:13,cursor:"pointer",fontWeight:energy===e?700:400}}>{e}</button>)}</div>
-      <span className="lbl">Duration</span><Dur h={h} m={m} sh={setH} sm={setM}/>
-    </div>
-    <div className="card">
-      <span className="lbl">Specific Topic</span><input value={topic} onChange={e=>setTopic(e.target.value)} className="inp" placeholder="e.g. Prompt Engineering"/>
-      <span className="lbl">Knowledge Acquired</span><textarea rows={2} value={learned} onChange={e=>setLearned(e.target.value)} className="inp" placeholder="Key takeaways..."/>
-      <span className="lbl">Friction Points</span><textarea rows={2} value={struggle} onChange={e=>setStruggle(e.target.value)} className="inp" placeholder="What was difficult?"/>
-      <span className="lbl">Measurable Progress</span><input value={progress} onChange={e=>setProgress(e.target.value)} className="inp" placeholder="Pages read, modules completed..."/>
-    </div>
-    {(sub||learned)&&<AIBtn label="Synthesize Knowledge" prompt={"Analyse study:\nSub: "+sub+"\nTopic: "+topic+"\nLearned: "+learned+"\nStruggled: "+struggle+"\n\nGive: 1)Assessment 2)Concept clarity tip 3)Next focus 4)Strategy tip"}/>}
+  const [topic,setTopic]=useState(""); const [learned,setLearned]=useState("");
+  const log=`Topic: ${topic}\nLearned: ${learned}`;
+  return <div className="card">
+    <input value={topic} onChange={e=>setTopic(e.target.value)} placeholder="Topic" className="inp"/>
+    <textarea value={learned} onChange={e=>setLearned(e.target.value)} placeholder="Takeaways" className="inp"/>
+    <AIBtn label="Synthesize Knowledge" prompt={log}/>
   </div>;
 }
 
-// Auto-generates a clean Journal for any custom tabs you build
 function CustomTab({ id, title, icon }) {
   const [text, setText] = useLocalStorage(`custom_tab_${id}`, "");
   return <div>
-    <div className="card" style={{borderTop:"4px solid #7A2A3B"}}>
-      <h3 style={{marginBottom:6, color:"#7A2A3B", fontSize:22}}>{icon} {title}</h3>
-      <p style={{fontSize: 12, color:"#888375", marginBottom: 16, fontStyle:"italic"}}>A dedicated space to chronicle thoughts and progress.</p>
-      <textarea rows={18} value={text} onChange={e=>setText(e.target.value)} className="inp" placeholder={`Record your entries for ${title} here...`} style={{fontSize: 15, lineHeight: "1.7", background:"transparent", border:"none", borderTop:"1px solid #D9D4C5", borderRadius:0, paddingTop:16}}/>
+    <div className="card"><h3>{icon} {title}</h3><textarea rows={10} value={text} onChange={e=>setText(e.target.value)} className="inp" placeholder="Journal..."/></div>
+    <AIBtn label={`Analyze ${title}`} prompt={text}/>
+  </div>;
+}
+
+function Settings(){
+  const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "I am a Senior Linguist focusing on health and growth.");
+  const [tabsStr, setTabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
+  const [draftTabs, setDraftTabs] = useState(JSON.parse(tabsStr));
+  const save = () => { setTabsStr(JSON.stringify(draftTabs)); alert("Saved!"); };
+  
+  return <div>
+    <div className="card">
+      <span className="lbl">Master Identity Context</span>
+      <textarea rows={4} value={sysCtx} onChange={e=>setSysCtx(e.target.value)} className="inp" placeholder="Who are you? What are your goals?"/>
+    </div>
+    <div className="card">
+      <h3 className="lbl">Custom Categories</h3>
+      {draftTabs.map((t, idx) => (
+        <div key={t.id} style={{display: "flex", gap: 8, marginBottom: 8}}>
+          <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 40}} />
+          <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" disabled={t.id === "settings"} />
+        </div>
+      ))}
+      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528"}}>+ Add</button>
+      <button onClick={save} className="pbtn" style={{background: "#232528"}}>Save Layout</button>
+    </div>
+  </div>;
+}
+
+function App(){
+  const [tabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
+  const tabs = JSON.parse(tabsStr);
+  const [tab, setTab] = useState("activity");
+  const [yMem, setYMem] = useLocalStorage("yesterday_mem", "");
+
+  const hr = new Date().getHours();
+  const greet = hr < 12 ? "Good morning." : hr < 17 ? "Good afternoon." : "Good evening.";
+  const today = new Date().toLocaleDateString("en-US", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+
+  return <div style={{maxWidth: 520, margin: "0 auto", paddingBottom: 90}}>
+    <div style={{padding: "30px 16px 20px", textAlign:"center", borderBottom:"1px solid #D9D4C5"}}>
+      <h1 style={{fontSize: 32, color: "#232528"}}>MY CHRONICLES</h1>
+      <p style={{fontSize: 14, fontStyle:"italic"}}>{greet} {today}</p>
+    </div>
+
+    <div style={{padding: "16px"}}>
+      <div className="card" style={{border: "1px solid #7A2A3B", background: "#F0EBEB"}}>
+        <span className="lbl" style={{color: "#7A2A3B"}}>Memory Loop Token</span>
+        <textarea rows={2} value={yMem} onChange={(e) => setYMem(e.target.value)} placeholder="Paste yesterday's AI summary here..." className="inp" style={{marginBottom: 0}}/>
+      </div>
+
+      {tabs.map(t => (
+        <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
+          {t.id === "activity" ? <Activity/> : t.id === "finance" ? <Finance/> :
+           t.id === "gym" ? <Gym/> : t.id === "skills" ? <Skills/> :
+           t.id === "settings" ? <Settings/> : <CustomTab id={t.id} title={t.label} icon={t.icon} />}
+        </div>
+      ))}
+    </div>
+
+    <div className="nav">
+      {tabs.map(t => <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
+        <span style={{fontSize: 20, color: tab === t.id ? "#7A2A3B" : "#A8A291"}}>{t.icon}</span>
+        <span style={{fontSize: 10, color: tab === t.id ? "#7A2A3B" : "#A8A291"}}>{t.label}</span>
+      </button>)}
     </div>
   </div>;
 }
@@ -424,326 +306,6 @@ const DEFAULT_TABS = [
   { id: "skills", icon: "◑", label: "Study" },
   { id: "settings", icon: "⚙", label: "Config" }
 ];
-
-function Settings(){
-  const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Keep responses direct, warm, and max 250 words.");
-  const [sysAct, setSysAct] = useLocalStorage("sys_act", "Deep work, Meetings, Commute, Break, Admin");
-  const [sysExp, setSysExp] = useLocalStorage("sys_exp", "Food, Transport, Bills, Family, Fun, Other");
-  const [sysInv, setSysInv] = useLocalStorage("sys_inv", "Skills, Health, Savings, Other");
-  const [sysGym, setSysGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
-  const [sysSkill, setSysSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
-  
-  const [draftCtx, setDraftCtx] = useState(sysCtx);
-  const [draftAct, setDraftAct] = useState(sysAct);
-  const [draftExp, setDraftExp] = useState(sysExp);
-  const [draftInv, setDraftInv] = useState(sysInv);
-  const [draftGym, setDraftGym] = useState(sysGym);
-  const [draftSkill, setDraftSkill] = useState(sysSkill);
-
-  const saveSystemDefaults = () => {
-    setSysCtx(draftCtx);
-    setSysAct(draftAct);
-    setSysExp(draftExp);
-    setSysInv(draftInv);
-    setSysGym(draftGym);
-    setSysSkill(draftSkill);
-    alert("✅ Configurations Saved!");
-  };
-
-  const [customCatsStr, setCustomCatsStr] = useLocalStorage("sys_custom_cats", "[]");
-  const [draftCats, setDraftCats] = useState(() => {
-    try { 
-       const parsed = JSON.parse(customCatsStr); 
-       return Array.isArray(parsed) ? parsed : [];
-    } catch(e) { return []; }
-  });
-
-  const saveCategories = () => {
-    setCustomCatsStr(JSON.stringify(draftCats));
-    alert("✅ Custom Categories Saved!");
-  };
-
-  const [tabsStr, setTabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
-  const [draftTabs, setDraftTabs] = useState(() => {
-    try { 
-       const parsed = JSON.parse(tabsStr); 
-       return Array.isArray(parsed) ? parsed : DEFAULT_TABS;
-    } catch(e) { return DEFAULT_TABS; }
-  });
-
-  const saveTabs = () => {
-    const finalTabs = draftTabs.filter(t => t.id !== "settings");
-    finalTabs.push({ id: "settings", icon: "⚙", label: "Config" });
-    setTabsStr(JSON.stringify(finalTabs));
-    alert("✅ Navigation Updated! Changes are live.");
-  };
-
-  const exportData = () => {
-    const allData = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      allData[key] = localStorage.getItem(key);
-    }
-    const blob = new Blob([JSON.stringify(allData)], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Chronicles_Backup_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-  };
-
-  const importData = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target.result);
-        Object.keys(data).forEach(key => { localStorage.setItem(key, data[key]); });
-        alert("✅ Archives Restored Successfully! Refreshing the page now...");
-        window.location.reload();
-      } catch (err) { alert("❌ This file is not a valid archive."); }
-    };
-    reader.readAsText(file);
-  };
-  
-  return <div>
-    <div className="card" style={{border:"1px solid #C4BEAD", background: "#EBE7DD", textAlign: "center"}}>
-      <h3 style={{marginBottom:8, color: "#4A443A", fontSize: "20px"}}>Archive Protection</h3>
-      <p style={{fontSize:13, color:"#5A544A", marginBottom:14, lineHeight: "1.5", fontStyle:"italic"}}>
-        <b style={{textDecoration: "underline", color:"#000"}}>Your data exists solely on this device.</b><br/> 
-        Export an archive frequently to protect your history before clearing browser cache.
-      </p>
-      <button onClick={exportData} className="pbtn" style={{background:"#232528", margin: "5px 0"}}>📥 Export Archive File</button>
-      <div style={{marginTop: 18, borderTop: "1px dashed #C4BEAD", paddingTop: 14}}>
-        <span className="lbl" style={{color: "#5A544A", marginBottom: 8, display: "block"}}>Restore from Archive</span>
-        <input type="file" accept=".json" onChange={importData} style={{fontSize: "12px", color: "#000", width: "100%", fontFamily:"'Merriweather',serif"}}/>
-      </div>
-    </div>
-
-    {/* THE TAB MANAGER */}
-    <div className="card" style={{borderTop:"3px solid #232528"}}>
-      <div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10}}>
-        <h3 style={{color: "#232528", fontSize:20}}>Custom Categories</h3>
-        <span style={{fontSize: 10, color: draftTabs.length >= 6 ? "#7A2A3B" : "#888375", fontWeight: 700, letterSpacing: 1}}>
-          USING {draftTabs.length} OF 6 SLOTS
-        </span>
-      </div>
-      <p style={{fontSize:12,color:"#888375",marginBottom:14,fontStyle:"italic"}}>Rename default tools, remove them, or add custom journals.</p>
-      
-      {draftTabs.map((t, idx) => (
-        <div key={t.id} style={{display: "flex", gap: 8, marginBottom: 8}}>
-          <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 50, textAlign: "center", marginBottom: 0}} />
-          <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0}} disabled={t.id === "settings"} />
-          {t.id !== "settings" && (
-            <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color: "#A8A291", background: "none", border: "none", cursor: "pointer", fontWeight: "bold", padding: "0 10px", fontSize:18}}>×</button>
-          )}
-        </div>
-      ))}
-      
-      <div style={{display: "flex", gap: 8, marginTop: 8}}>
-        {draftTabs.length < 6 && (
-          <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528", marginTop: 0, flex: 1}}>+ Add New Section</button>
-        )}
-        <button onClick={() => setDraftTabs(DEFAULT_TABS)} className="pbtn" style={{background: "transparent", color: "#5A544A", border: "1px dashed #C4BEAD", marginTop: 0, flex: 1}}>↺ Restore Defaults</button>
-      </div>
-      
-      <button onClick={saveTabs} className="pbtn" style={{background: "#232528", marginTop: 12}}>💾 Save Layout</button>
-    </div>
-
-    {/* CUSTOM CATEGORIES BUILDER */}
-    <div className="card" style={{borderTop:"3px solid #7A2A3B"}}>
-      <h3 style={{marginBottom:10, color: "#7A2A3B", fontSize:20}}>Custom Classifications</h3>
-      <p style={{fontSize:12,color:"#888375",marginBottom:14,fontStyle:"italic"}}>These will automatically appear in your Journal log.</p>
-      
-      {draftCats.map(c => (
-        <div key={c.id} style={{marginBottom: 16, padding: "14px", border: "1px dashed #C4BEAD", borderRadius: 4, background: "#EBE7DD"}}>
-          <div style={{display: "flex", justifyContent: "space-between", marginBottom: 12}}>
-            <input 
-              value={c.name} 
-              onChange={e => { const n = [...draftCats]; n.find(x=>x.id===c.id).name = e.target.value; setDraftCats(n); }} 
-              style={{fontWeight: "700", border: "none", borderBottom: "2px solid #7A2A3B", background: "transparent", width: "70%", fontSize: 18, color: "#7A2A3B", outline: "none", fontFamily:"'Playfair Display',serif"}} 
-              placeholder="Classification Name"
-            />
-            <button onClick={() => setDraftCats(draftCats.filter(x=>x.id!==c.id))} style={{color: "#A8A291", background: "none", border: "none", cursor: "pointer", fontSize: 18, fontWeight: "bold"}}>×</button>
-          </div>
-          <span className="lbl">Items (comma separated)</span>
-          <input 
-            value={c.tags} 
-            onChange={e => { const n = [...draftCats]; n.find(x=>x.id===c.id).tags = e.target.value; setDraftCats(n); }} 
-            className="inp" 
-            placeholder="e.g. Prayer, Reading, Reflection"
-            style={{marginBottom:0}}
-          />
-        </div>
-      ))}
-      
-      <button onClick={() => setDraftCats([...draftCats, { id: Date.now(), name: "New Class", tags: "Item 1, Item 2" }])} className="pbtn" style={{background: "transparent", color: "#7A2A3B", border: "1px solid #7A2A3B", marginTop: 8}}>
-        + Add Classification
-      </button>
-      <button onClick={saveCategories} className="pbtn" style={{background: "#7A2A3B", marginTop: 12}}>💾 Save Classifications</button>
-    </div>
-
-    {/* SYSTEM DEFAULTS & AI */}
-    <div className="card" style={{marginTop: 20}}>
-      <h3 style={{marginBottom:10, fontSize:20}}>System Defaults & Persona</h3>
-      <p style={{fontSize:12,color:"#888375",marginBottom:16,fontStyle:"italic"}}>Modify the default lists for your core tools and configure the assistant. Separate list items with commas (,)</p>
-      
-      <span className="lbl">Assistant Persona Rules</span>
-      <textarea rows={3} value={draftCtx} onChange={e=>setDraftCtx(e.target.value)} className="inp" placeholder="e.g., I am an analytical editor..."/>
-      
-      <span className="lbl">Journal Defaults</span>
-      <input value={draftAct} onChange={e=>setDraftAct(e.target.value)} className="inp"/>
-      
-      <span className="lbl">Ledger: Expenses</span>
-      <input value={draftExp} onChange={e=>setDraftExp(e.target.value)} className="inp"/>
-      
-      <span className="lbl">Ledger: Investments</span>
-      <input value={draftInv} onChange={e=>setDraftInv(e.target.value)} className="inp"/>
-      
-      <span className="lbl">Training: Focus Muscles</span>
-      <input value={draftGym} onChange={e=>setDraftGym(e.target.value)} className="inp"/>
-      
-      <span className="lbl">Study: Subjects</span>
-      <input value={draftSkill} onChange={e=>setDraftSkill(e.target.value)} className="inp"/>
-
-      <button onClick={saveSystemDefaults} className="pbtn" style={{background: "#5A544A", marginTop: 8}}>💾 Save Configurations</button>
-    </div>
-  </div>;
-}
-
-function App(){
-  const [tabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
-  let tabs = DEFAULT_TABS;
-  try { 
-     const parsed = JSON.parse(tabsStr); 
-     if(Array.isArray(parsed)) tabs = parsed;
-  } catch(e) {}
-
-  const [tab, setTab] = useState("activity");
-
-  useEffect(() => {
-    if (tabs.length > 0 && !tabs.find(x => x.id === tab)) {
-      setTab(tabs[0].id);
-    }
-  }, [tabs, tab]);
-
-  const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6_final", "false");
-  const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
-  const [welcomeStep, setWelcomeStep] = useState(1);
-  const [tempKey, setTempKey] = useState("");
-
-  const hr = new Date().getHours();
-  const greet = hr < 12 ? "Good morning." : hr < 17 ? "Good afternoon." : "Good evening.";
-  const today = new Date().toLocaleDateString("en-US", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
-
-  const finishWelcome = () => {
-    setHasVisited("true");
-    setShowWelcome(false);
-  };
-
-  const saveKeyAndNext = () => {
-    if(tempKey.trim() !== "") {
-      localStorage.setItem("gemini_api_key", tempKey.trim());
-    }
-    setWelcomeStep(3);
-  };
-
-  return <div style={{maxWidth: 520, margin: "0 auto", paddingBottom: 90}}>
-    {showWelcome && (
-      <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
-        <div className="card" style={{textAlign: "center", width: "100%", maxWidth: 400}}>
-          
-          {welcomeStep === 1 && (
-            <div>
-              <h2 style={{marginBottom: 16, fontSize:28}}>The Chronicles</h2>
-              <p style={{fontSize: 15, color: "#000", marginBottom: 24, lineHeight: "1.6"}}>
-                Your personal editorial system is ready. Would you like to enable the <b>AI Analysis</b> feature?
-              </p>
-              <button onClick={() => setWelcomeStep(2)} className="pbtn" style={{background: "#7A2A3B", marginBottom: 12}}>
-                ✦ Enable Assistant
-              </button>
-              <button onClick={() => setWelcomeStep(3)} className="pbtn" style={{background: "transparent", color:"#4A443A", border:"1px solid #C4BEAD"}}>
-                Disable Assistant
-              </button>
-            </div>
-          )}
-
-          {welcomeStep === 2 && (
-            <div>
-              <h2 style={{marginBottom: 16, fontSize:24}}>Connect Intelligence</h2>
-              <div style={{fontSize: 14, color: "#000", marginBottom: 16, textAlign: "left", lineHeight: "1.7", background: "#EBE7DD", padding: 16, borderRadius: 4}}>
-                <b>Step 1:</b> Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" style={{color:"#7A2A3B", fontWeight:"bold", textDecoration:"underline"}}>Google AI Studio</a><br/>
-                <b>Step 2:</b> Navigate: <b>Sign In &gt; Get API key &gt; Create API key</b><br/>
-                <b>Step 3:</b> Paste the key below.
-                
-                <div style={{marginTop: 14, paddingTop: 12, borderTop: "1px dashed #C4BEAD", fontSize: 12, lineHeight: "1.6", color:"#5A544A"}}>
-                  <b style={{color: "#7A2A3B", fontFamily:"'Playfair Display',serif", letterSpacing: 0.5}}>API Key Options:</b><br/>
-                  • <b>Free Tier:</b> Good for insights. Standard Google terms apply (prompts may be processed to improve services).<br/>
-                  • <b>Paid Tier (Pay-as-you-go):</b> Maximum Privacy. Google guarantees your prompts are never used for training. Costs &lt; ₹120/month.<br/>
-                  <br/>
-                  <span style={{fontStyle:"italic"}}>Stored locally. Your data remains on this device.</span>
-                </div>
-              </div>
-              <input 
-                type="text" 
-                placeholder="Paste API key here..." 
-                value={tempKey} 
-                onChange={(e) => setTempKey(e.target.value)}
-                className="inp"
-              />
-              <button onClick={saveKeyAndNext} className="pbtn" style={{background: "#232528", marginBottom: 12}}>Save Key</button>
-              <button onClick={() => setWelcomeStep(3)} style={{background: "none", border: "none", color: "#888375", textDecoration: "underline", cursor: "pointer", fontSize: 13, fontStyle:"italic"}}>Skip for now</button>
-            </div>
-          )}
-
-          {welcomeStep === 3 && (
-            <div>
-              <h2 style={{marginBottom: 16, fontSize:24}}>Absolute Privacy</h2>
-              <p style={{fontSize: 15, color: "#000", marginBottom: 16, lineHeight: "1.6"}}>
-                <b>Your data never leaves this device.</b> Nobody else can see your entries.
-              </p>
-              <div style={{background: "#EBE7DD", padding: 16, borderRadius: 4, marginBottom: 24, textAlign: "left", borderLeft:"4px solid #7A2A3B"}}>
-                <p style={{fontSize: 13, color: "#4A443A", margin: 0, lineHeight: "1.6", fontStyle:"italic"}}>
-                  <b>Warning:</b> If you clear your browser cache, your history will be erased. Use the <b>Export Archive</b> button in the Config tab frequently!
-                </p>
-              </div>
-              <button onClick={finishWelcome} className="pbtn" style={{background: "#232528"}}>Enter Chronicles</button>
-            </div>
-          )}
-
-        </div>
-      </div>
-    )}
-
-    <div style={{padding: "30px 16px 20px", marginBottom: 10, textAlign:"center", borderBottom:"1px solid #D9D4C5"}}>
-      <h1 style={{fontSize: 32, fontWeight: 800, color: "#232528", marginBottom: 4, letterSpacing:1}}>MY CHRONICLES</h1>
-      <p style={{fontSize: 14, color: "#7A2A3B", fontStyle:"italic", fontWeight:700}}>{greet} <span style={{color:"#5A544A", fontWeight:400}}>{today}</span></p>
-    </div>
-
-    {/* MASTER APP RENDERING WITH INSTANT REACTIVITY */}
-    <div style={{padding: "10px 16px 0"}}>
-      {tabs.map(t => (
-        <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
-          {t.id === "activity" ? <Activity/> :
-           t.id === "finance" ? <Finance/> :
-           t.id === "gym" ? <Gym/> :
-           t.id === "skills" ? <Skills/> :
-           t.id === "settings" ? <Settings/> :
-           <CustomTab id={t.id} title={t.label} icon={t.icon} />}
-        </div>
-      ))}
-    </div>
-
-    {/* DYNAMIC NAVIGATION MENU */}
-    <div className="nav">
-      {tabs.map(t => <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
-        <span style={{fontSize: 20, color: tab === t.id ? "#7A2A3B" : "#A8A291", filter: tab === t.id ? "none" : "grayscale(100%)", transition:"0.2s"}}>{t.icon}</span>
-        <span style={{fontSize: 10, fontFamily: "'Merriweather',serif", color: tab === t.id ? "#7A2A3B" : "#A8A291", fontWeight: tab === t.id ? 700 : 400, letterSpacing: 1, textTransform:"uppercase", marginTop:2}}>{t.label}</span>
-      </button>)}
-    </div>
-  </div>;
-}
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
