@@ -414,7 +414,6 @@ function Settings(){
   });
 
   const saveTabs = () => {
-    if(draftTabs.length === 0) return alert("❌ You must have at least one tab!");
     const finalTabs = draftTabs.filter(t => t.id !== "settings");
     finalTabs.push({ id: "settings", icon: "⚙", label: "Config" });
     setTabsStr(JSON.stringify(finalTabs));
@@ -466,8 +465,14 @@ function Settings(){
 
     {/* THE TAB MANAGER */}
     <div className="card" style={{borderTop:"3px solid #232528"}}>
-      <h3 style={{marginBottom:10, color: "#232528", fontSize:20}}>Manage Navigation</h3>
+      <div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10}}>
+        <h3 style={{color: "#232528", fontSize:20}}>Custom Categories</h3>
+        <span style={{fontSize: 10, color: draftTabs.length >= 6 ? "#7A2A3B" : "#888375", fontWeight: 700, letterSpacing: 1}}>
+          USING {draftTabs.length} OF 6 SLOTS
+        </span>
+      </div>
       <p style={{fontSize:12,color:"#888375",marginBottom:14,fontStyle:"italic"}}>Rename default tools, remove them, or add custom journals.</p>
+      
       {draftTabs.map((t, idx) => (
         <div key={t.id} style={{display: "flex", gap: 8, marginBottom: 8}}>
           <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 50, textAlign: "center", marginBottom: 0}} />
@@ -477,7 +482,14 @@ function Settings(){
           )}
         </div>
       ))}
-      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528", marginTop: 8}}>+ Add New Section</button>
+      
+      <div style={{display: "flex", gap: 8, marginTop: 8}}>
+        {draftTabs.length < 6 && (
+          <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528", marginTop: 0, flex: 1}}>+ Add New Section</button>
+        )}
+        <button onClick={() => setDraftTabs(DEFAULT_TABS)} className="pbtn" style={{background: "transparent", color: "#5A544A", border: "1px dashed #C4BEAD", marginTop: 0, flex: 1}}>↺ Restore Defaults</button>
+      </div>
+      
       <button onClick={saveTabs} className="pbtn" style={{background: "#232528", marginTop: 12}}>💾 Save Layout</button>
     </div>
 
