@@ -26,7 +26,7 @@ body{font-family:Georgia,serif;background:#f5f5f0;padding-bottom:80px}
 <div id="root"></div>
 const {useState, useEffect} = React;
 
-// UPGRADE 1: Instant Memory Sync across all tabs
+// THE ENGINE: Instant Memory Sync across all tabs
 function useLocalStorage(key, init) {
   const [val, setVal] = useState(() => {
     try {
@@ -324,7 +324,7 @@ function Skills(){
   </div>;
 }
 
-// UPGRADE 2: Auto-generates a clean Journal for any custom tabs you build
+// Auto-generates a clean Journal for any custom tabs you build
 function CustomTab({ id, title, icon }) {
   const [text, setText] = useLocalStorage(`custom_tab_${id}`, "");
   return <div>
@@ -337,22 +337,41 @@ function CustomTab({ id, title, icon }) {
 }
 
 const DEFAULT_TABS = [
-  { id: "activity", icon: "◎", label: "Activity", core: true },
-  { id: "finance", icon: "₹", label: "Finance", core: true },
-  { id: "gym", icon: "◈", label: "Gym", core: true },
-  { id: "skills", icon: "◑", label: "Skills", core: true },
-  { id: "settings", icon: "⚙", label: "Settings", core: true }
+  { id: "activity", icon: "◎", label: "Activity" },
+  { id: "finance", icon: "₹", label: "Finance" },
+  { id: "gym", icon: "◈", label: "Gym" },
+  { id: "skills", icon: "◑", label: "Skills" },
+  { id: "settings", icon: "⚙", label: "Settings" }
 ];
 
 function Settings(){
-  const [ctx, setCtx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Keep responses direct, warm, and max 250 words.");
-  const [act, setAct] = useLocalStorage("sys_act", "Deep work, Meetings, Commute, Break, Admin");
-  const [exp, setExp] = useLocalStorage("sys_exp", "Food, Transport, Bills, Family, Fun, Other");
-  const [inv, setInv] = useLocalStorage("sys_inv", "Skills, Health, Savings, Other");
-  const [gym, setGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
-  const [skill, setSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
+  // Master Sync Hooks
+  const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Keep responses direct, warm, and max 250 words.");
+  const [sysAct, setSysAct] = useLocalStorage("sys_act", "Deep work, Meetings, Commute, Break, Admin");
+  const [sysExp, setSysExp] = useLocalStorage("sys_exp", "Food, Transport, Bills, Family, Fun, Other");
+  const [sysInv, setSysInv] = useLocalStorage("sys_inv", "Skills, Health, Savings, Other");
+  const [sysGym, setSysGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
+  const [sysSkill, setSysSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
   
-  // Custom Categories Logic with manual save
+  // Draft States for Editing Without Breaking the UI immediately
+  const [draftCtx, setDraftCtx] = useState(sysCtx);
+  const [draftAct, setDraftAct] = useState(sysAct);
+  const [draftExp, setDraftExp] = useState(sysExp);
+  const [draftInv, setDraftInv] = useState(sysInv);
+  const [draftGym, setDraftGym] = useState(sysGym);
+  const [draftSkill, setDraftSkill] = useState(sysSkill);
+
+  const saveSystemDefaults = () => {
+    setSysCtx(draftCtx);
+    setSysAct(draftAct);
+    setSysExp(draftExp);
+    setSysInv(draftInv);
+    setSysGym(draftGym);
+    setSysSkill(draftSkill);
+    alert("✅ System Defaults & Persona Saved!");
+  };
+
+  // Custom Categories Draft Logic
   const [customCatsStr, setCustomCatsStr] = useLocalStorage("sys_custom_cats", "[]");
   const [draftCats, setDraftCats] = useState(() => {
     try { return JSON.parse(customCatsStr); } catch(e) { return []; }
@@ -360,18 +379,22 @@ function Settings(){
 
   const saveCategories = () => {
     setCustomCatsStr(JSON.stringify(draftCats));
-    alert("✅ Categories Saved & Synced instantly, Human.");
+    alert("✅ Custom Categories Saved!");
   };
 
-  // Tab Manager Logic
+  // Navigation Tabs Draft Logic
   const [tabsStr, setTabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
   const [draftTabs, setDraftTabs] = useState(() => {
     try { return JSON.parse(tabsStr); } catch(e) { return DEFAULT_TABS; }
   });
 
   const saveTabs = () => {
-    setTabsStr(JSON.stringify(draftTabs));
-    alert("✅ Navigation Tabs Updated!");
+    if(draftTabs.length === 0) return alert("❌ You must have at least one tab!");
+    // Ensure Settings is always there at the end
+    const finalTabs = draftTabs.filter(t => t.id !== "settings");
+    finalTabs.push({ id: "settings", icon: "⚙", label: "Settings" });
+    setTabsStr(JSON.stringify(finalTabs));
+    alert("✅ Navigation Menu Updated! Changes are live.");
   };
 
   const exportData = () => {
@@ -419,8 +442,8 @@ function Settings(){
 
     {/* THE TAB MANAGER */}
     <div className="card" style={{border:"2px solid #1a1a2e"}}>
-      <h3 style={{marginBottom:10, color: "#1a1a2e"}}>📱 Manage Navigation Tabs</h3>
-      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Remove default tools or add custom journals.</p>
+      <h3 style={{marginBottom:10, color: "#1a1a2e"}}>📱 Manage Navigation Menu</h3>
+      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Rename default tools, remove them, or add custom journals.</p>
       {draftTabs.map((t, idx) => (
         <div key={t.id} style={{display: "flex", gap: 6, marginBottom: 8}}>
           <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 50, textAlign: "center", marginBottom: 0}} />
@@ -430,14 +453,14 @@ function Settings(){
           )}
         </div>
       ))}
-      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Tab", core: false }])} className="pbtn" style={{background: "#fff", color: "#1a1a2e", border: "1.5px solid #1a1a2e", marginTop: 5, fontWeight: "bold"}}>+ Add New Tab</button>
-      <button onClick={saveTabs} className="pbtn" style={{background: "#1a1a2e", marginTop: 10}}>💾 Save Tabs</button>
+      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Tab" }])} className="pbtn" style={{background: "#fff", color: "#1a1a2e", border: "1.5px solid #1a1a2e", marginTop: 5, fontWeight: "bold"}}>+ Add New Tab</button>
+      <button onClick={saveTabs} className="pbtn" style={{background: "#1a1a2e", marginTop: 10}}>💾 Save Menu Layout</button>
     </div>
 
-    {/* CATEGORIES BUILDER */}
+    {/* CUSTOM CATEGORIES BUILDER */}
     <div className="card" style={{border:"2px solid #3C3489"}}>
       <h3 style={{marginBottom:10, color: "#3C3489"}}>➕ Build Your Own Categories</h3>
-      <p style={{fontSize:12,color:"#666",marginBottom:12}}>These will appear in your Activity log.</p>
+      <p style={{fontSize:12,color:"#666",marginBottom:12}}>These will automatically appear in your Activity log.</p>
       
       {draftCats.map(c => (
         <div key={c.id} style={{marginBottom: 15, padding: "12px", border: "1px dashed #3C3489", borderRadius: 8, background: "#fafafa"}}>
@@ -466,25 +489,30 @@ function Settings(){
       <button onClick={saveCategories} className="pbtn" style={{background: "#3C3489", marginTop: 10}}>💾 Save Categories</button>
     </div>
 
-    <div className="card" style={{border:"1px solid #1a1a2e", marginTop: 20}}>
-      <h3 style={{marginBottom:10}}>Setup Your Assistant</h3>
-      <span className="lbl">AI Persona & Rules</span>
-      <textarea rows={4} value={ctx} onChange={e=>setCtx(e.target.value)} className="inp" placeholder="e.g., I am a translator working in Hyderabad..."/>
-    </div>
-    
-    <div className="card">
-      <h3 style={{marginBottom:10}}>System Default Categories</h3>
-      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Separate items with commas (,)</p>
-      <span className="lbl">Activity Tracker</span>
-      <input value={act} onChange={e=>setAct(e.target.value)} className="inp"/>
-      <span className="lbl">Expenses</span>
-      <input value={exp} onChange={e=>setExp(e.target.value)} className="inp"/>
-      <span className="lbl">Investments</span>
-      <input value={inv} onChange={e=>setInv(e.target.value)} className="inp"/>
-      <span className="lbl">Gym Focus</span>
-      <input value={gym} onChange={e=>setGym(e.target.value)} className="inp"/>
-      <span className="lbl">Learning Subjects</span>
-      <input value={skill} onChange={e=>setSkill(e.target.value)} className="inp"/>
+    {/* SYSTEM DEFAULTS & AI */}
+    <div className="card" style={{border:"1px solid #aaa", marginTop: 20}}>
+      <h3 style={{marginBottom:10}}>System Defaults & AI Persona</h3>
+      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Modify the default lists for your core tools and configure your AI's personality. Separate list items with commas (,)</p>
+      
+      <span className="lbl">AI Persona Rules</span>
+      <textarea rows={3} value={draftCtx} onChange={e=>setDraftCtx(e.target.value)} className="inp" placeholder="e.g., I am a translator working in Hyderabad..."/>
+      
+      <span className="lbl">Activity Tracker Defaults</span>
+      <input value={draftAct} onChange={e=>setDraftAct(e.target.value)} className="inp"/>
+      
+      <span className="lbl">Finance: Expenses</span>
+      <input value={draftExp} onChange={e=>setDraftExp(e.target.value)} className="inp"/>
+      
+      <span className="lbl">Finance: Investments</span>
+      <input value={draftInv} onChange={e=>setDraftInv(e.target.value)} className="inp"/>
+      
+      <span className="lbl">Gym: Focus Muscles</span>
+      <input value={draftGym} onChange={e=>setDraftGym(e.target.value)} className="inp"/>
+      
+      <span className="lbl">Skills: Subjects</span>
+      <input value={draftSkill} onChange={e=>setDraftSkill(e.target.value)} className="inp"/>
+
+      <button onClick={saveSystemDefaults} className="pbtn" style={{background: "#666", marginTop: 5}}>💾 Save System Defaults</button>
     </div>
   </div>;
 }
@@ -495,6 +523,14 @@ function App(){
   try { tabs = JSON.parse(tabsStr); } catch(e) {}
 
   const [tab, setTab] = useState("activity");
+
+  // Fallback if current tab gets deleted
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.find(x => x.id === tab)) {
+      setTab(tabs[0].id);
+    }
+  }, [tabs, tab]);
+
   const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6_final", "false");
   const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
   const [welcomeStep, setWelcomeStep] = useState(1);
@@ -587,17 +623,16 @@ function App(){
       <p style={{fontSize: 13, color: "#8888aa"}}>{today}</p>
     </div>
 
+    {/* MASTER APP RENDERING WITH INSTANT REACTIVITY */}
     <div style={{padding: "0 12px"}}>
-      <div style={{display: tab === "activity" ? "block" : "none"}}><Activity/></div>
-      <div style={{display: tab === "finance" ? "block" : "none"}}><Finance/></div>
-      <div style={{display: tab === "gym" ? "block" : "none"}}><Gym/></div>
-      <div style={{display: tab === "skills" ? "block" : "none"}}><Skills/></div>
-      <div style={{display: tab === "settings" ? "block" : "none"}}><Settings/></div>
-      
-      {/* Renders Custom Tabs Automatically */}
-      {tabs.filter(t => !t.core).map(t => (
+      {tabs.map(t => (
         <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
-          <CustomTab id={t.id} title={t.label} icon={t.icon} />
+          {t.id === "activity" ? <Activity/> :
+           t.id === "finance" ? <Finance/> :
+           t.id === "gym" ? <Gym/> :
+           t.id === "skills" ? <Skills/> :
+           t.id === "settings" ? <Settings/> :
+           <CustomTab id={t.id} title={t.label} icon={t.icon} />}
         </div>
       ))}
     </div>
