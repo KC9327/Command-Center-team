@@ -3,23 +3,29 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>MY CHRONICLES</title>
+<title>My Chronicles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Georgia,serif;background:#f5f5f0;padding-bottom:80px}
-.card{background:#fff;border-radius:14px;border:1px solid #eee;padding:16px;margin-bottom:12px}
-.lbl{font-size:11px;color:#999;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:block}
-.inp{width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:10px;font-size:14px;font-family:Georgia,serif;color:#222;background:#fafafa;outline:none;resize:none;margin-bottom:10px}
-.pbtn{width:100%;padding:12px;color:#fff;border:none;border-radius:10px;font-size:14px;font-family:Georgia,serif;cursor:pointer;margin-top:8px}
-.tbtn{padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;font-family:Georgia,serif;border:1px solid #ddd;background:transparent;color:#888;margin:3px}
-.sbtn{width:28px;height:28px;border-radius:8px;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-size:16px;font-weight:700;color:#333}
-.dbtn{float:right;background:none;border:none;color:#ccc;font-size:18px;cursor:pointer}
-.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;padding:8px 4px 12px;overflow-x:auto}
-.nb{min-width:60px;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:6px 2px}
-.ai{background:#1a1a2e;border-radius:12px;padding:16px;color:#e8e4f0;font-size:14px;line-height:1.75;white-space:pre-wrap;margin-top:10px}
+body{font-family:'Merriweather',serif;background:#EBE7DD;padding-bottom:80px;color:#000000;}
+.card{background:#F8F7F2;border-radius:8px;border:1px solid #D9D4C5;padding:18px;margin-bottom:14px;box-shadow:0 2px 4px rgba(0,0,0,0.02);}
+h1, h2, h3, h4 {font-family:'Playfair Display',serif; color:#7A2A3B; letter-spacing: 0.5px;}
+.lbl{font-size:10px;color:#5A544A;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;display:block;font-weight:700;}
+.inp{width:100%;padding:12px;border:1px solid #C4BEAD;border-radius:4px;font-size:15px;font-family:'Merriweather',serif;color:#000000;background:#EBE7DD;outline:none;resize:none;margin-bottom:12px; transition: border 0.2s;}
+.inp:focus{border: 1px solid #7A2A3B; background: #F8F7F2;}
+.inp::placeholder{color:#888375;}
+.pbtn{width:100%;padding:14px;color:#F8F7F2;border:none;border-radius:4px;font-size:14px;font-family:'Merriweather',serif;font-weight:700;cursor:pointer;margin-top:8px;letter-spacing: 1px;text-transform: uppercase;}
+.tbtn{padding:8px 16px;border-radius:4px;font-size:13px;cursor:pointer;font-family:'Merriweather',serif;border:1px solid #C4BEAD;background:transparent;color:#4A443A;margin:4px 4px 4px 0;}
+.sbtn{width:32px;height:32px;border-radius:4px;border:1px solid #C4BEAD;background:#EBE7DD;cursor:pointer;font-size:18px;font-weight:700;color:#000}
+.dbtn{float:right;background:none;border:none;color:#A8A291;font-size:18px;cursor:pointer}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#F8F7F2;border-top:1px solid #D9D4C5;display:flex;padding:10px 4px 16px;overflow-x:auto;box-shadow:0 -2px 10px rgba(0,0,0,0.03);}
+.nb{min-width:60px;flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;padding:6px 2px}
+.ai{background:#232528;border-radius:6px;padding:18px;color:#F8F7F2;font-size:14px;line-height:1.8;white-space:pre-wrap;margin-top:12px;border-left:4px solid #7A2A3B;}
 </style>
 </head>
 <body>
@@ -53,36 +59,35 @@ function useLocalStorage(key, init) {
 }
 
 const PALETTE=[
-  {bg:"#F0EEF8",tx:"#3C3489",br:"#9B8FD9"},{bg:"#EAF3DE",tx:"#27500A",br:"#639922"},
-  {bg:"#E6F1FB",tx:"#0C447C",br:"#378ADD"},{bg:"#E1F5EE",tx:"#085041",br:"#1D9E75"},
-  {bg:"#FAEEDA",tx:"#633806",br:"#EF9F27"},{bg:"#FAECE7",tx:"#712B13",br:"#D85A30"},
-  {bg:"#FBEAF0",tx:"#72243E",br:"#D4537E"},{bg:"#F1EFE8",tx:"#444441",br:"#888780"}
+  {bg:"#F0EBEB",tx:"#7A2A3B",br:"#B06373"},{bg:"#EBECE7",tx:"#3A4533",br:"#69785D"},
+  {bg:"#E8ECEF",tx:"#2A3B4C",br:"#58718A"},{bg:"#EBE6DD",tx:"#5A4222",br:"#8A704D"},
+  {bg:"#F2EBE5",tx:"#6B3C2A",br:"#A36F5A"},{bg:"#EFECEF",tx:"#3A3B45",br:"#6E7182"}
 ];
 
 function Tag({label,sel,onClick,bg,tx,br}){
-  return <button className="tbtn" onClick={onClick} style={{background:sel?(bg||"#EEEDFE"):"transparent",color:sel?(tx||"#3C3489"):"#888",border:sel?"1.5px solid "+(br||"#534AB7"):"1px solid #ddd",fontWeight:sel?600:400}}>{label}</button>;
+  return <button className="tbtn" onClick={onClick} style={{background:sel?(bg||"#F0EBEB"):"transparent",color:sel?(tx||"#000"):"#4A443A",border:sel?"1.5px solid "+(br||"#7A2A3B"):"1px solid #C4BEAD",fontWeight:sel?700:400}}>{label}</button>;
 }
 
 function Dur({h,m,sh,sm}){
-  return <div style={{display:"flex",gap:12,alignItems:"center"}}>
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-      <span style={{fontSize:11,color:"#999"}}>HOURS</span>
-      <div style={{display:"flex",alignItems:"center",gap:6}}>
+  return <div style={{display:"flex",gap:16,alignItems:"center"}}>
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+      <span style={{fontSize:10,color:"#888375",fontWeight:700,letterSpacing:1}}>HOURS</span>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
         <button className="sbtn" onClick={()=>sh(Math.max(0,h-1))}>-</button>
-        <span style={{fontSize:20,fontWeight:700,minWidth:28,textAlign:"center"}}>{h}</span>
+        <span style={{fontSize:22,fontWeight:700,minWidth:32,textAlign:"center",fontFamily:"'Playfair Display',serif"}}>{h}</span>
         <button className="sbtn" onClick={()=>sh(Math.min(12,h+1))}>+</button>
       </div>
     </div>
-    <span style={{fontSize:22,color:"#ccc",marginTop:16}}>:</span>
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-      <span style={{fontSize:11,color:"#999"}}>MINS</span>
-      <div style={{display:"flex",alignItems:"center",gap:6}}>
+    <span style={{fontSize:24,color:"#C4BEAD",marginTop:18,fontFamily:"'Playfair Display',serif"}}>:</span>
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+      <span style={{fontSize:10,color:"#888375",fontWeight:700,letterSpacing:1}}>MINS</span>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
         <button className="sbtn" onClick={()=>sm(Math.max(0,m-5))}>-</button>
-        <span style={{fontSize:20,fontWeight:700,minWidth:28,textAlign:"center"}}>{m}</span>
+        <span style={{fontSize:22,fontWeight:700,minWidth:32,textAlign:"center",fontFamily:"'Playfair Display',serif"}}>{m}</span>
         <button className="sbtn" onClick={()=>sm(Math.min(55,m+5))}>+</button>
       </div>
     </div>
-    <span style={{fontSize:13,color:"#999",marginTop:16}}>{h>0?h+"h ":""}{m}m</span>
+    <span style={{fontSize:14,color:"#5A544A",marginTop:18,fontStyle:"italic"}}>{h>0?h+"h ":""}{m}m</span>
   </div>;
 }
 
@@ -122,8 +127,8 @@ function AIBtn({prompt,label}){
       }
     }catch(e){setRes("Network Error."); setLoad(false);}
   }
-  return <div style={{marginTop:16}}>
-    <button onClick={()=>run(1)} disabled={load} className="pbtn" style={{background:load?"#888":"#1a1a2e"}}>{load?"Analysing...":"✦ "+label}</button>
+  return <div style={{marginTop:20}}>
+    <button onClick={()=>run(1)} disabled={load} className="pbtn" style={{background:load?"#888375":"#232528"}}>{load?"Analysing Notes...":"✦ "+label}</button>
     {res&&<div className="ai">{res}</div>}
   </div>;
 }
@@ -166,25 +171,25 @@ function Activity(){
   const log=entries.map(e=>`${e.time} | ${e.cat} | ${Math.floor(e.mins/60)}h${e.mins%60}m | ${e.text}`).join("\n");
   
   return <div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
-      <div style={{background:"#1a1a2e",borderRadius:12,padding:14,color:"#fff",textAlign:"center"}}>
-        <div style={{fontSize:26,fontWeight:700}}>{entries.length}</div>
-        <div style={{fontSize:12,color:"#aaa",marginTop:2}}>Entries</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
+      <div style={{background:"#232528",borderRadius:8,padding:16,color:"#F8F7F2",textAlign:"center",borderBottom:"4px solid #7A2A3B"}}>
+        <div style={{fontSize:28,fontFamily:"'Playfair Display',serif"}}>{entries.length}</div>
+        <div style={{fontSize:11,color:"#C4BEAD",marginTop:4,letterSpacing:1}}>ENTRIES</div>
       </div>
-      <div style={{background:"#1a1a2e",borderRadius:12,padding:14,color:"#fff",textAlign:"center"}}>
-        <div style={{fontSize:22,fontWeight:700}}>{Math.floor(total/60)}h {total%60}m</div>
-        <div style={{fontSize:12,color:"#aaa",marginTop:2}}>Tracked</div>
+      <div style={{background:"#232528",borderRadius:8,padding:16,color:"#F8F7F2",textAlign:"center",borderBottom:"4px solid #7A2A3B"}}>
+        <div style={{fontSize:24,fontFamily:"'Playfair Display',serif",marginTop:2}}>{Math.floor(total/60)}h {total%60}m</div>
+        <div style={{fontSize:11,color:"#C4BEAD",marginTop:4,letterSpacing:1}}>TRACKED</div>
       </div>
     </div>
 
     <div className="card">
-      <span className="lbl">Start time</span>
+      <span className="lbl">Start Time</span>
       <input type="time" value={time} onChange={e=>setTime(e.target.value)} className="inp" style={{width:"auto"}}/>
-      <span className="lbl">What did you do?</span>
-      <textarea rows={2} value={text} onChange={e=>setText(e.target.value)} placeholder="Describe the activity..." className="inp"/>
+      <span className="lbl">Journal Entry</span>
+      <textarea rows={2} value={text} onChange={e=>setText(e.target.value)} placeholder="Chronicle this activity..." className="inp"/>
       
-      <span className="lbl">Standard Category</span>
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:4}}>
+      <span className="lbl" style={{marginTop: 8}}>Standard Categories</span>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:6}}>
         {defCats.map(c=><Tag key={c.n} label={c.n} sel={cat===c.n} onClick={()=>setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br}/>)}
       </div>
 
@@ -192,9 +197,9 @@ function Activity(){
          const items = cc.tags.split(",").map(t => t.trim()).filter(t=>t);
          if(items.length === 0) return null;
          return (
-            <div key={cc.id} style={{marginTop: 10}}>
-              <span className="lbl" style={{color: "#3C3489"}}>{cc.name}</span>
-              <div style={{display:"flex",flexWrap:"wrap",marginBottom:4}}>
+            <div key={cc.id} style={{marginTop: 12}}>
+              <span className="lbl" style={{color: "#7A2A3B"}}>{cc.name}</span>
+              <div style={{display:"flex",flexWrap:"wrap",marginBottom:6}}>
                 {items.map(item => {
                    const tCat = ALL_CATS.find(x => x.n === item);
                    return <Tag key={item} label={item} sel={cat===item} onClick={()=>setCat(item)} bg={tCat?.bg} tx={tCat?.tx} br={tCat?.br}/>
@@ -204,34 +209,34 @@ function Activity(){
          );
       })}
 
-      <div style={{marginTop: 12}}>
+      <div style={{marginTop: 16}}>
         <span className="lbl">Duration</span>
         <Dur h={h} m={m} sh={setH} sm={setM}/>
       </div>
-      <button onClick={add} className="pbtn" style={{background:"#1a1a2e"}}>+ Log activity</button>
+      <button onClick={add} className="pbtn" style={{background:"#232528"}}>+ Log Entry</button>
     </div>
 
     {entries.length>0&&<>
       <div className="card">
-        <span className="lbl">Time breakdown</span>
+        <span className="lbl">Time Breakdown</span>
         {Object.entries(grp).sort((a,b)=>b[1]-a[1]).map(([c,mins])=>{
           const ct=ALL_CATS.find(x=>x.n===c);
-          return <div key={c} style={{marginBottom:10}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:13}}>{c}</span><span style={{fontSize:13,color:"#888"}}>{Math.floor(mins/60)}h {mins%60}m</span></div>
-            <div style={{height:6,background:"#f0f0f0",borderRadius:4}}><div style={{height:6,width:Math.round((mins/total)*100)+"%",background:ct?.br||"#534AB7",borderRadius:4}}/></div>
+          return <div key={c} style={{marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:14,color:"#000"}}>{c}</span><span style={{fontSize:13,color:"#5A544A",fontStyle:"italic"}}>{Math.floor(mins/60)}h {mins%60}m</span></div>
+            <div style={{height:4,background:"#EBE7DD",borderRadius:2}}><div style={{height:4,width:Math.round((mins/total)*100)+"%",background:ct?.br||"#7A2A3B",borderRadius:2}}/></div>
           </div>;
         })}
       </div>
       {[...entries].reverse().map(e=>{
         const c=ALL_CATS.find(x=>x.n===e.cat);
-        return <div key={e.id} className="card">
-          <button className="dbtn" onClick={()=>setEntries(entries.filter(x=>x.id!==e.id))}>x</button>
-          <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:c?.bg||"#eee",color:c?.tx||"#333"}}>{e.cat}</span>
-          <div style={{fontSize:14,color:"#222",marginTop:6}}>{e.text}</div>
-          <div style={{fontSize:12,color:"#aaa",marginTop:4}}>{e.time} · {Math.floor(e.mins/60)}h {e.mins%60}m</div>
+        return <div key={e.id} className="card" style={{borderLeft:"4px solid "+(c?.br||"#7A2A3B")}}>
+          <button className="dbtn" onClick={()=>setEntries(entries.filter(x=>x.id!==e.id))}>×</button>
+          <span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:c?.bg||"#EBE7DD",color:c?.tx||"#000",fontWeight:700,textTransform:"uppercase"}}>{e.cat}</span>
+          <div style={{fontSize:15,color:"#000",marginTop:10,lineHeight:1.6}}>{e.text}</div>
+          <div style={{fontSize:12,color:"#888375",marginTop:8,fontStyle:"italic",fontFamily:"Georgia,serif"}}>{e.time} · {Math.floor(e.mins/60)}h {e.mins%60}m</div>
         </div>;
       })}
-      <AIBtn label="Review my day" prompt={"Review this day log:\n"+log+"\n\nTotal: "+Math.floor(total/60)+"h "+total%60+"m\n\nGive: 1)Identity statement 2)Time lost 3)Wins 4)Alignment check 5)3 improvements for tomorrow 6)CEO mantra"}/>
+      <AIBtn label="Review My Chronicles" prompt={"Review this day log:\n"+log+"\n\nTotal: "+Math.floor(total/60)+"h "+total%60+"m\n\nGive: 1)Identity statement 2)Time lost 3)Wins 4)Alignment check 5)3 improvements for tomorrow 6)CEO mantra"}/>
     </>}
   </div>;
 }
@@ -253,27 +258,36 @@ function Finance(){
   const sum="Expenses:\n"+expenses.map(e=>"- "+e.c+": "+e.d+" Rs."+e.a).join("\n")+"\nInvestments:\n"+invs.map(e=>"- "+e.c+": "+e.d+" Rs."+e.a).join("\n");
   
   return <div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
-      <div style={{background:"#7F0000",borderRadius:12,padding:14,color:"#fff",textAlign:"center"}}><div style={{fontSize:22,fontWeight:700}}>Rs.{te.toFixed(0)}</div><div style={{fontSize:12,color:"#ffaaaa",marginTop:2}}>Spent</div></div>
-      <div style={{background:"#0F6E56",borderRadius:12,padding:14,color:"#fff",textAlign:"center"}}><div style={{fontSize:22,fontWeight:700}}>Rs.{ti.toFixed(0)}</div><div style={{fontSize:12,color:"#aaffd4",marginTop:2}}>Invested</div></div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
+      <div style={{background:"#F0EBEB",borderRadius:8,padding:16,border:"1px solid #B06373",textAlign:"center"}}>
+        <div style={{fontSize:24,fontFamily:"'Playfair Display',serif",color:"#7A2A3B",fontWeight:700}}>₹{te.toFixed(0)}</div>
+        <div style={{fontSize:11,color:"#7A2A3B",marginTop:4,letterSpacing:1,fontWeight:700}}>SPENT</div>
+      </div>
+      <div style={{background:"#EBECE7",borderRadius:8,padding:16,border:"1px solid #69785D",textAlign:"center"}}>
+        <div style={{fontSize:24,fontFamily:"'Playfair Display',serif",color:"#3A4533",fontWeight:700}}>₹{ti.toFixed(0)}</div>
+        <div style={{fontSize:11,color:"#3A4533",marginTop:4,letterSpacing:1,fontWeight:700}}>INVESTED</div>
+      </div>
     </div>
     <div style={{display:"flex",gap:8,marginBottom:14}}>
-      {["exp","inv"].map(t=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"9px 0",borderRadius:10,border:tab===t?"1.5px solid #1a1a2e":"1px solid #eee",background:tab===t?"#1a1a2e":"#fafafa",color:tab===t?"#fff":"#888",fontFamily:"Georgia,serif",fontSize:13,cursor:"pointer",fontWeight:tab===t?600:400}}>{t==="exp"?"Expense":"Investment"}</button>)}
+      {["exp","inv"].map(t=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"10px 0",borderRadius:4,border:tab===t?"1px solid #232528":"1px solid #C4BEAD",background:tab===t?"#232528":"#F8F7F2",color:tab===t?"#F8F7F2":"#5A544A",fontFamily:"'Merriweather',serif",fontSize:13,cursor:"pointer",fontWeight:tab===t?700:400,letterSpacing:1,textTransform:"uppercase"}}>{t==="exp"?"Expenses":"Investments"}</button>)}
     </div>
     <div className="card">
       <span className="lbl">Category</span>
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{tab==="exp"?ECATS.map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>):ICATS.map(c=><Tag key={c} label={c} sel={ic===c} onClick={()=>setIc(c)} bg="#EAF3DE" tx="#27500A" br="#639922"/>)}</div>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{tab==="exp"?ECATS.map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>):ICATS.map(c=><Tag key={c} label={c} sel={ic===c} onClick={()=>setIc(c)} bg="#EBECE7" tx="#3A4533" br="#69785D"/>)}</div>
       <span className="lbl">Description</span>
       <input value={tab==="exp"?ed:id} onChange={e=>tab==="exp"?setEd(e.target.value):setId(e.target.value)} placeholder="e.g. Groceries" className="inp"/>
       <span className="lbl">Amount</span>
-      <input type="number" value={tab==="exp"?ea:ia} onChange={e=>tab==="exp"?setEa(e.target.value):setIa(e.target.value)} placeholder="0" className="inp" style={{width:140}}/>
-      <button onClick={tab==="exp"?addE:addI} className="pbtn" style={{background:tab==="exp"?"#7F0000":"#0F6E56"}}>+ Add {tab==="exp"?"expense":"investment"}</button>
-      {(tab==="exp"?expenses:invs).map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"0.5px solid #f0f0f0"}}>
-        <div><span style={{fontSize:13}}>{e.d}</span><span style={{fontSize:11,color:"#aaa",marginLeft:8}}>{e.c}</span></div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:14,fontWeight:600,color:tab==="exp"?"#7F0000":"#0F6E56"}}>Rs.{e.a}</span><button className="dbtn" onClick={()=>tab==="exp"?setExpenses(expenses.filter(x=>x.id!==e.id)):setInvs(invs.filter(x=>x.id!==e.id))}>x</button></div>
+      <input type="number" value={tab==="exp"?ea:ia} onChange={e=>tab==="exp"?setEa(e.target.value):setIa(e.target.value)} placeholder="0" className="inp" style={{width:160, fontFamily:"'Playfair Display',serif", fontSize:18}}/>
+      <button onClick={tab==="exp"?addE:addI} className="pbtn" style={{background:tab==="exp"?"#7A2A3B":"#3A4533"}}>+ Log {tab==="exp"?"Expense":"Investment"}</button>
+      
+      <div style={{marginTop: 16}}>
+      {(tab==="exp"?expenses:invs).map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #EBE7DD"}}>
+        <div><span style={{fontSize:14,color:"#000"}}>{e.d}</span><span style={{fontSize:10,color:"#888375",marginLeft:8,textTransform:"uppercase",fontWeight:700}}>{e.c}</span></div>
+        <div style={{display:"flex",alignItems:"center",gap:12}}><span style={{fontSize:16,fontFamily:"'Playfair Display',serif",fontWeight:700,color:tab==="exp"?"#7A2A3B":"#3A4533"}}>₹{e.a}</span><button className="dbtn" onClick={()=>tab==="exp"?setExpenses(expenses.filter(x=>x.id!==e.id)):setInvs(invs.filter(x=>x.id!==e.id))}>×</button></div>
       </div>)}
+      </div>
     </div>
-    {(expenses.length>0||invs.length>0)&&<AIBtn label="Get financial insights" prompt={"Analyse finances:\n"+sum+"\n\nGive: 1)Spending pattern 2)Goal alignment 3)One thing to cut 4)Tip for tomorrow"}/>}
+    {(expenses.length>0||invs.length>0)&&<AIBtn label="Ledger Analysis" prompt={"Analyse finances:\n"+sum+"\n\nGive: 1)Spending pattern 2)Goal alignment 3)One thing to cut 4)Tip for tomorrow"}/>}
   </div>;
 }
 
@@ -287,21 +301,24 @@ function Gym(){
   function addEx(){if(!en.trim())return;setExs([...exs,{id:Date.now(),n:en,s:es,r:er,w:ew}]);setEn("");setEs("");setEr("");setEw("");}
   return <div>
     <div className="card">
-      <span className="lbl">Focus</span>
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{MUSCLES.map(g=><Tag key={g} label={g} sel={muscle===g} onClick={()=>setMuscle(g)} bg="#EAF3DE" tx="#27500A" br="#639922"/>)}</div>
-      <span className="lbl">Energy</span>
-      <div style={{display:"flex",gap:8,marginBottom:12}}>{["High","Medium","Low"].map(e=><button key={e} onClick={()=>setEnergy(e)} style={{flex:1,padding:"8px 0",borderRadius:10,border:energy===e?"1.5px solid #639922":"1px solid #eee",background:energy===e?"#EAF3DE":"#fafafa",color:energy===e?"#27500A":"#888",fontFamily:"Georgia,serif",fontSize:13,cursor:"pointer",fontWeight:energy===e?600:400}}>{e}</button>)}</div>
+      <span className="lbl">Training Focus</span>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:16}}>{MUSCLES.map(g=><Tag key={g} label={g} sel={muscle===g} onClick={()=>setMuscle(g)} bg="#EBECE7" tx="#3A4533" br="#69785D"/>)}</div>
+      <span className="lbl">Energy Levels</span>
+      <div style={{display:"flex",gap:8,marginBottom:16}}>{["High","Medium","Low"].map(e=><button key={e} onClick={()=>setEnergy(e)} style={{flex:1,padding:"10px 0",borderRadius:4,border:energy===e?"1px solid #69785D":"1px solid #C4BEAD",background:energy===e?"#EBECE7":"#F8F7F2",color:energy===e?"#3A4533":"#5A544A",fontFamily:"'Merriweather',serif",fontSize:13,cursor:"pointer",fontWeight:energy===e?700:400}}>{e}</button>)}</div>
       <span className="lbl">Duration</span><Dur h={h} m={m} sh={setH} sm={setM}/>
     </div>
     <div className="card">
-      <span className="lbl">Log exercise</span>
-      <input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise" className="inp"/>
-      <div style={{display:"flex",gap:8}}><input value={es} onChange={e=>setEs(e.target.value)} placeholder="Sets" className="inp"/><input value={er} onChange={e=>setEr(e.target.value)} placeholder="Reps" className="inp"/><input value={ew} onChange={e=>setEw(e.target.value)} placeholder="Weight" className="inp"/></div>
-      <button onClick={addEx} className="pbtn" style={{background:"#27500A"}}>+ Add exercise</button>
-      {exs.map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"0.5px solid #f0f0f0"}}><span style={{fontSize:13}}>{e.n}</span><div style={{display:"flex",gap:6,alignItems:"center"}}><span style={{fontSize:12,color:"#639922"}}>{e.s}x{e.r}@{e.w}</span><button className="dbtn" onClick={()=>setExs(exs.filter(x=>x.id!==e.id))}>x</button></div></div>)}
+      <span className="lbl">Log Movement</span>
+      <input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise Name" className="inp"/>
+      <div style={{display:"flex",gap:10}}><input value={es} onChange={e=>setEs(e.target.value)} placeholder="Sets" className="inp"/><input value={er} onChange={e=>setEr(e.target.value)} placeholder="Reps" className="inp"/><input value={ew} onChange={e=>setEw(e.target.value)} placeholder="Weight" className="inp"/></div>
+      <button onClick={addEx} className="pbtn" style={{background:"#3A4533"}}>+ Add Movement</button>
+      
+      <div style={{marginTop:16}}>
+      {exs.map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid #EBE7DD"}}><span style={{fontSize:14,color:"#000"}}>{e.n}</span><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:14,color:"#3A4533",fontFamily:"'Playfair Display',serif",fontWeight:700}}>{e.s} × {e.r} @ {e.w}</span><button className="dbtn" onClick={()=>setExs(exs.filter(x=>x.id!==e.id))}>×</button></div></div>)}
+      </div>
     </div>
-    <div className="card"><span className="lbl">Notes</span><textarea rows={2} value={notes} onChange={e=>setNotes(e.target.value)} className="inp"/></div>
-    {(muscle||exs.length>0)&&<AIBtn label="Get gym insights" prompt={"Analyse gym session:\nFocus: "+muscle+"\nEnergy: "+energy+"\n"+exs.map(e=>"- "+e.n+": "+e.s+"x"+e.r+"@"+e.w).join("\n")+"\nNotes: "+notes+"\n\nGive: 1)Assessment 2)Form tip 3)Recovery 4)Next target 5)Motivation"}/>}
+    <div className="card"><span className="lbl">Physical Notes</span><textarea rows={3} value={notes} onChange={e=>setNotes(e.target.value)} className="inp" placeholder="Record form, fatigue, or milestones..."/></div>
+    {(muscle||exs.length>0)&&<AIBtn label="Assess Training" prompt={"Analyse gym session:\nFocus: "+muscle+"\nEnergy: "+energy+"\n"+exs.map(e=>"- "+e.n+": "+e.s+"x"+e.r+"@"+e.w).join("\n")+"\nNotes: "+notes+"\n\nGive: 1)Assessment 2)Form tip 3)Recovery 4)Next target 5)Motivation"}/>}
   </div>;
 }
 
@@ -314,19 +331,19 @@ function Skills(){
   const [h,setH]=useLocalStorage("sk_h",0);const [m,setM]=useLocalStorage("sk_m",50);
   return <div>
     <div className="card">
-      <span className="lbl">Subject</span>
-      <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>{SUBJECTS.map(s=><Tag key={s} label={s} sel={sub===s} onClick={()=>setSub(s)} bg="#FAEEDA" tx="#633806" br="#EF9F27"/>)}</div>
-      <span className="lbl">Energy</span>
-      <div style={{display:"flex",gap:8,marginBottom:12}}>{["High","Medium","Low"].map(e=><button key={e} onClick={()=>setEnergy(e)} style={{flex:1,padding:"8px 0",borderRadius:10,border:energy===e?"1.5px solid #EF9F27":"1px solid #eee",background:energy===e?"#FAEEDA":"#fafafa",color:energy===e?"#633806":"#888",fontFamily:"Georgia,serif",fontSize:13,cursor:"pointer",fontWeight:energy===e?600:400}}>{e}</button>)}</div>
+      <span className="lbl">Area of Study</span>
+      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>{SUBJECTS.map(s=><Tag key={s} label={s} sel={sub===s} onClick={()=>setSub(s)} bg="#E8ECEF" tx="#2A3B4C" br="#58718A"/>)}</div>
+      <span className="lbl">Mental Energy</span>
+      <div style={{display:"flex",gap:8,marginBottom:16}}>{["High","Medium","Low"].map(e=><button key={e} onClick={()=>setEnergy(e)} style={{flex:1,padding:"10px 0",borderRadius:4,border:energy===e?"1px solid #58718A":"1px solid #C4BEAD",background:energy===e?"#E8ECEF":"#F8F7F2",color:energy===e?"#2A3B4C":"#5A544A",fontFamily:"'Merriweather',serif",fontSize:13,cursor:"pointer",fontWeight:energy===e?700:400}}>{e}</button>)}</div>
       <span className="lbl">Duration</span><Dur h={h} m={m} sh={setH} sm={setM}/>
     </div>
     <div className="card">
-      <span className="lbl">Topic studied</span><input value={topic} onChange={e=>setTopic(e.target.value)} className="inp"/>
-      <span className="lbl">Learned</span><textarea rows={2} value={learned} onChange={e=>setLearned(e.target.value)} className="inp"/>
-      <span className="lbl">Struggled with</span><textarea rows={2} value={struggle} onChange={e=>setStruggle(e.target.value)} className="inp"/>
-      <span className="lbl">Progress</span><input value={progress} onChange={e=>setProgress(e.target.value)} className="inp"/>
+      <span className="lbl">Specific Topic</span><input value={topic} onChange={e=>setTopic(e.target.value)} className="inp" placeholder="e.g. Prompt Engineering"/>
+      <span className="lbl">Knowledge Acquired</span><textarea rows={2} value={learned} onChange={e=>setLearned(e.target.value)} className="inp" placeholder="Key takeaways..."/>
+      <span className="lbl">Friction Points</span><textarea rows={2} value={struggle} onChange={e=>setStruggle(e.target.value)} className="inp" placeholder="What was difficult?"/>
+      <span className="lbl">Measurable Progress</span><input value={progress} onChange={e=>setProgress(e.target.value)} className="inp" placeholder="Pages read, modules completed..."/>
     </div>
-    {(sub||learned)&&<AIBtn label="Get learning insights" prompt={"Analyse study:\nSub: "+sub+"\nTopic: "+topic+"\nLearned: "+learned+"\nStruggled: "+struggle+"\n\nGive: 1)Assessment 2)Concept clarity tip 3)Next focus 4)Strategy tip"}/>}
+    {(sub||learned)&&<AIBtn label="Synthesize Knowledge" prompt={"Analyse study:\nSub: "+sub+"\nTopic: "+topic+"\nLearned: "+learned+"\nStruggled: "+struggle+"\n\nGive: 1)Assessment 2)Concept clarity tip 3)Next focus 4)Strategy tip"}/>}
   </div>;
 }
 
@@ -334,20 +351,20 @@ function Skills(){
 function CustomTab({ id, title, icon }) {
   const [text, setText] = useLocalStorage(`custom_tab_${id}`, "");
   return <div>
-    <div className="card">
-      <h3 style={{marginBottom:10, color:"#3C3489"}}>{icon} {title} Journal</h3>
-      <p style={{fontSize: 12, color:"#666", marginBottom: 12}}>A dedicated space to log thoughts and progress.</p>
-      <textarea rows={15} value={text} onChange={e=>setText(e.target.value)} className="inp" placeholder={`Type your ${title} entries here...`} style={{fontSize: 14, lineHeight: "1.6"}}/>
+    <div className="card" style={{borderTop:"4px solid #7A2A3B"}}>
+      <h3 style={{marginBottom:6, color:"#7A2A3B", fontSize:22}}>{icon} {title}</h3>
+      <p style={{fontSize: 12, color:"#888375", marginBottom: 16, fontStyle:"italic"}}>A dedicated space to chronicle thoughts and progress.</p>
+      <textarea rows={18} value={text} onChange={e=>setText(e.target.value)} className="inp" placeholder={`Record your entries for ${title} here...`} style={{fontSize: 15, lineHeight: "1.7", background:"transparent", border:"none", borderTop:"1px solid #D9D4C5", borderRadius:0, paddingTop:16}}/>
     </div>
   </div>;
 }
 
 const DEFAULT_TABS = [
-  { id: "activity", icon: "◎", label: "Activity" },
-  { id: "finance", icon: "₹", label: "Finance" },
-  { id: "gym", icon: "◈", label: "Gym" },
-  { id: "skills", icon: "◑", label: "Skills" },
-  { id: "settings", icon: "⚙", label: "Settings" }
+  { id: "activity", icon: "◎", label: "Journal" },
+  { id: "finance", icon: "₹", label: "Ledger" },
+  { id: "gym", icon: "◈", label: "Training" },
+  { id: "skills", icon: "◑", label: "Study" },
+  { id: "settings", icon: "⚙", label: "Config" }
 ];
 
 function Settings(){
@@ -372,7 +389,7 @@ function Settings(){
     setSysInv(draftInv);
     setSysGym(draftGym);
     setSysSkill(draftSkill);
-    alert("✅ System Defaults & Persona Saved!");
+    alert("✅ Configurations Saved!");
   };
 
   const [customCatsStr, setCustomCatsStr] = useLocalStorage("sys_custom_cats", "[]");
@@ -399,9 +416,9 @@ function Settings(){
   const saveTabs = () => {
     if(draftTabs.length === 0) return alert("❌ You must have at least one tab!");
     const finalTabs = draftTabs.filter(t => t.id !== "settings");
-    finalTabs.push({ id: "settings", icon: "⚙", label: "Settings" });
+    finalTabs.push({ id: "settings", icon: "⚙", label: "Config" });
     setTabsStr(JSON.stringify(finalTabs));
-    alert("✅ Navigation Menu Updated! Changes are live.");
+    alert("✅ Navigation Updated! Changes are live.");
   };
 
   const exportData = () => {
@@ -414,7 +431,7 @@ function Settings(){
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `CommandCenter_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `Chronicles_Backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
   };
 
@@ -426,100 +443,101 @@ function Settings(){
       try {
         const data = JSON.parse(event.target.result);
         Object.keys(data).forEach(key => { localStorage.setItem(key, data[key]); });
-        alert("✅ Data Restored Successfully! Refreshing the page now...");
+        alert("✅ Archives Restored Successfully! Refreshing the page now...");
         window.location.reload();
-      } catch (err) { alert("❌ This file is not a valid backup."); }
+      } catch (err) { alert("❌ This file is not a valid archive."); }
     };
     reader.readAsText(file);
   };
   
   return <div>
-    <div className="card" style={{border:"1.5px solid #3C3489", background: "#F0EEF8", textAlign: "center"}}>
-      <h3 style={{marginBottom:8, color: "#3C3489", fontSize: "16px"}}>🛡️ Data Protection</h3>
-      <p style={{fontSize:13, color:"#3C3489", marginBottom:12, lineHeight: "1.4"}}>
-        <b style={{textDecoration: "underline"}}>Your data is saved to this device only, Human.</b><br/> 
-        Export a backup frequently to protect your history before clearing browser cache.
+    <div className="card" style={{border:"1px solid #C4BEAD", background: "#EBE7DD", textAlign: "center"}}>
+      <h3 style={{marginBottom:8, color: "#4A443A", fontSize: "20px"}}>Archive Protection</h3>
+      <p style={{fontSize:13, color:"#5A544A", marginBottom:14, lineHeight: "1.5", fontStyle:"italic"}}>
+        <b style={{textDecoration: "underline", color:"#000"}}>Your data exists solely on this device.</b><br/> 
+        Export an archive frequently to protect your history before clearing browser cache.
       </p>
-      <button onClick={exportData} className="pbtn" style={{background:"#3C3489", margin: "5px 0"}}>📤 Export Backup File</button>
-      <div style={{marginTop: 15, borderTop: "1px solid #D1CDE9", paddingTop: 10}}>
-        <span className="lbl" style={{color: "#3C3489", marginBottom: 8, display: "block"}}>Restore from Backup</span>
-        <input type="file" accept=".json" onChange={importData} style={{fontSize: "11px", color: "#3C3489", width: "100%"}}/>
+      <button onClick={exportData} className="pbtn" style={{background:"#232528", margin: "5px 0"}}>📥 Export Archive File</button>
+      <div style={{marginTop: 18, borderTop: "1px dashed #C4BEAD", paddingTop: 14}}>
+        <span className="lbl" style={{color: "#5A544A", marginBottom: 8, display: "block"}}>Restore from Archive</span>
+        <input type="file" accept=".json" onChange={importData} style={{fontSize: "12px", color: "#000", width: "100%", fontFamily:"'Merriweather',serif"}}/>
       </div>
     </div>
 
     {/* THE TAB MANAGER */}
-    <div className="card" style={{border:"2px solid #1a1a2e"}}>
-      <h3 style={{marginBottom:10, color: "#1a1a2e"}}>📱 Manage Navigation Menu</h3>
-      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Rename default tools, remove them, or add custom journals.</p>
+    <div className="card" style={{borderTop:"3px solid #232528"}}>
+      <h3 style={{marginBottom:10, color: "#232528", fontSize:20}}>Manage Navigation</h3>
+      <p style={{fontSize:12,color:"#888375",marginBottom:14,fontStyle:"italic"}}>Rename default tools, remove them, or add custom journals.</p>
       {draftTabs.map((t, idx) => (
-        <div key={t.id} style={{display: "flex", gap: 6, marginBottom: 8}}>
+        <div key={t.id} style={{display: "flex", gap: 8, marginBottom: 8}}>
           <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 50, textAlign: "center", marginBottom: 0}} />
           <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0}} disabled={t.id === "settings"} />
           {t.id !== "settings" && (
-            <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color: "#d85a30", background: "none", border: "none", cursor: "pointer", fontWeight: "bold", padding: "0 10px"}}>❌</button>
+            <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color: "#A8A291", background: "none", border: "none", cursor: "pointer", fontWeight: "bold", padding: "0 10px", fontSize:18}}>×</button>
           )}
         </div>
       ))}
-      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Tab" }])} className="pbtn" style={{background: "#fff", color: "#1a1a2e", border: "1.5px solid #1a1a2e", marginTop: 5, fontWeight: "bold"}}>+ Add New Tab</button>
-      <button onClick={saveTabs} className="pbtn" style={{background: "#1a1a2e", marginTop: 10}}>💾 Save Menu Layout</button>
+      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528", marginTop: 8}}>+ Add New Section</button>
+      <button onClick={saveTabs} className="pbtn" style={{background: "#232528", marginTop: 12}}>💾 Save Layout</button>
     </div>
 
     {/* CUSTOM CATEGORIES BUILDER */}
-    <div className="card" style={{border:"2px solid #3C3489"}}>
-      <h3 style={{marginBottom:10, color: "#3C3489"}}>➕ Build Your Own Categories</h3>
-      <p style={{fontSize:12,color:"#666",marginBottom:12}}>These will automatically appear in your Activity log.</p>
+    <div className="card" style={{borderTop:"3px solid #7A2A3B"}}>
+      <h3 style={{marginBottom:10, color: "#7A2A3B", fontSize:20}}>Custom Classifications</h3>
+      <p style={{fontSize:12,color:"#888375",marginBottom:14,fontStyle:"italic"}}>These will automatically appear in your Journal log.</p>
       
       {draftCats.map(c => (
-        <div key={c.id} style={{marginBottom: 15, padding: "12px", border: "1px dashed #3C3489", borderRadius: 8, background: "#fafafa"}}>
-          <div style={{display: "flex", justifyContent: "space-between", marginBottom: 8}}>
+        <div key={c.id} style={{marginBottom: 16, padding: "14px", border: "1px dashed #C4BEAD", borderRadius: 4, background: "#EBE7DD"}}>
+          <div style={{display: "flex", justifyContent: "space-between", marginBottom: 12}}>
             <input 
               value={c.name} 
               onChange={e => { const n = [...draftCats]; n.find(x=>x.id===c.id).name = e.target.value; setDraftCats(n); }} 
-              style={{fontWeight: "bold", border: "none", borderBottom: "1px solid #3C3489", background: "transparent", width: "70%", fontSize: 15, color: "#3C3489", outline: "none"}} 
-              placeholder="Category Name"
+              style={{fontWeight: "700", border: "none", borderBottom: "2px solid #7A2A3B", background: "transparent", width: "70%", fontSize: 18, color: "#7A2A3B", outline: "none", fontFamily:"'Playfair Display',serif"}} 
+              placeholder="Classification Name"
             />
-            <button onClick={() => setDraftCats(draftCats.filter(x=>x.id!==c.id))} style={{color: "#d85a30", background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "bold"}}>❌ Delete</button>
+            <button onClick={() => setDraftCats(draftCats.filter(x=>x.id!==c.id))} style={{color: "#A8A291", background: "none", border: "none", cursor: "pointer", fontSize: 18, fontWeight: "bold"}}>×</button>
           </div>
           <span className="lbl">Items (comma separated)</span>
           <input 
             value={c.tags} 
             onChange={e => { const n = [...draftCats]; n.find(x=>x.id===c.id).tags = e.target.value; setDraftCats(n); }} 
             className="inp" 
-            placeholder="e.g., Prayer, Bible, Worship"
+            placeholder="e.g. Prayer, Reading, Reflection"
+            style={{marginBottom:0}}
           />
         </div>
       ))}
       
-      <button onClick={() => setDraftCats([...draftCats, { id: Date.now(), name: "New Category", tags: "Item 1, Item 2" }])} className="pbtn" style={{background: "#fff", color: "#3C3489", border: "1.5px solid #3C3489", marginTop: 5, fontWeight: "bold"}}>
-        + Add New Category
+      <button onClick={() => setDraftCats([...draftCats, { id: Date.now(), name: "New Class", tags: "Item 1, Item 2" }])} className="pbtn" style={{background: "transparent", color: "#7A2A3B", border: "1px solid #7A2A3B", marginTop: 8}}>
+        + Add Classification
       </button>
-      <button onClick={saveCategories} className="pbtn" style={{background: "#3C3489", marginTop: 10}}>💾 Save Categories</button>
+      <button onClick={saveCategories} className="pbtn" style={{background: "#7A2A3B", marginTop: 12}}>💾 Save Classifications</button>
     </div>
 
     {/* SYSTEM DEFAULTS & AI */}
-    <div className="card" style={{border:"1px solid #aaa", marginTop: 20}}>
-      <h3 style={{marginBottom:10}}>System Defaults & AI Persona</h3>
-      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Modify the default lists for your core tools and configure your AI's personality. Separate list items with commas (,)</p>
+    <div className="card" style={{marginTop: 20}}>
+      <h3 style={{marginBottom:10, fontSize:20}}>System Defaults & Persona</h3>
+      <p style={{fontSize:12,color:"#888375",marginBottom:16,fontStyle:"italic"}}>Modify the default lists for your core tools and configure the assistant. Separate list items with commas (,)</p>
       
-      <span className="lbl">AI Persona Rules</span>
-      <textarea rows={3} value={draftCtx} onChange={e=>setDraftCtx(e.target.value)} className="inp" placeholder="e.g., I am a translator working in Hyderabad..."/>
+      <span className="lbl">Assistant Persona Rules</span>
+      <textarea rows={3} value={draftCtx} onChange={e=>setDraftCtx(e.target.value)} className="inp" placeholder="e.g., I am an analytical editor..."/>
       
-      <span className="lbl">Activity Tracker Defaults</span>
+      <span className="lbl">Journal Defaults</span>
       <input value={draftAct} onChange={e=>setDraftAct(e.target.value)} className="inp"/>
       
-      <span className="lbl">Finance: Expenses</span>
+      <span className="lbl">Ledger: Expenses</span>
       <input value={draftExp} onChange={e=>setDraftExp(e.target.value)} className="inp"/>
       
-      <span className="lbl">Finance: Investments</span>
+      <span className="lbl">Ledger: Investments</span>
       <input value={draftInv} onChange={e=>setDraftInv(e.target.value)} className="inp"/>
       
-      <span className="lbl">Gym: Focus Muscles</span>
+      <span className="lbl">Training: Focus Muscles</span>
       <input value={draftGym} onChange={e=>setDraftGym(e.target.value)} className="inp"/>
       
-      <span className="lbl">Skills: Subjects</span>
+      <span className="lbl">Study: Subjects</span>
       <input value={draftSkill} onChange={e=>setDraftSkill(e.target.value)} className="inp"/>
 
-      <button onClick={saveSystemDefaults} className="pbtn" style={{background: "#666", marginTop: 5}}>💾 Save System Defaults</button>
+      <button onClick={saveSystemDefaults} className="pbtn" style={{background: "#5A544A", marginTop: 8}}>💾 Save Configurations</button>
     </div>
   </div>;
 }
@@ -546,7 +564,7 @@ function App(){
   const [tempKey, setTempKey] = useState("");
 
   const hr = new Date().getHours();
-  const greet = hr < 12 ? "Good morning, Human." : hr < 17 ? "Good afternoon, Human." : "Good evening, Human.";
+  const greet = hr < 12 ? "Good morning." : hr < 17 ? "Good afternoon." : "Good evening.";
   const today = new Date().toLocaleDateString("en-US", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
 
   const finishWelcome = () => {
@@ -561,64 +579,62 @@ function App(){
     setWelcomeStep(3);
   };
 
-  return <div style={{maxWidth: 480, margin: "0 auto", paddingBottom: 90}}>
+  return <div style={{maxWidth: 520, margin: "0 auto", paddingBottom: 90}}>
     {showWelcome && (
       <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
-        <div className="card" style={{textAlign: "center", border: "2px solid #3C3489", width: "100%", maxWidth: 400, background: "#fff"}}>
+        <div className="card" style={{textAlign: "center", width: "100%", maxWidth: 400}}>
           
           {welcomeStep === 1 && (
             <div>
-              <h2 style={{color: "#3C3489", marginBottom: 15}}>Welcome, Human. 🚀</h2>
-              <p style={{fontSize: 14, color: "#444", marginBottom: 20, lineHeight: "1.5"}}>
-                Your MY CHRONICLES is ready. Would you like to enable the <b>AI Daily Review</b> feature?
+              <h2 style={{marginBottom: 16, fontSize:28}}>The Chronicles</h2>
+              <p style={{fontSize: 15, color: "#000", marginBottom: 24, lineHeight: "1.6"}}>
+                Your personal editorial system is ready. Would you like to enable the <b>AI Analysis</b> feature?
               </p>
-              <button onClick={() => setWelcomeStep(2)} className="pbtn" style={{background: "#3C3489", marginBottom: 12, padding: "12px"}}>
-                ✨ Option 1: Continue with AI
+              <button onClick={() => setWelcomeStep(2)} className="pbtn" style={{background: "#7A2A3B", marginBottom: 12}}>
+                ✦ Enable Assistant
               </button>
-              <button onClick={() => setWelcomeStep(3)} className="pbtn" style={{background: "#666", padding: "12px"}}>
-                ⏭️ Option 2: Basic Mode (No AI)
+              <button onClick={() => setWelcomeStep(3)} className="pbtn" style={{background: "transparent", color:"#4A443A", border:"1px solid #C4BEAD"}}>
+                Proceed in Analog Mode
               </button>
             </div>
           )}
 
           {welcomeStep === 2 && (
             <div>
-              <h2 style={{color: "#3C3489", marginBottom: 15}}>🤖 Connect AI</h2>
-              <div style={{fontSize: 13, color: "#444", marginBottom: 15, textAlign: "left", lineHeight: "1.6", background: "#f5f5f5", padding: 12, borderRadius: 8}}>
-                <b>Step 1:</b> Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" style={{color:"#d85a30", fontWeight:"bold", textDecoration:"underline"}}>Google AI Studio</a><br/>
-                <b>Step 2:</b> Navigation: <b>Sign In &gt; Get API key &gt; Create API key</b><br/>
-                <b>Step 3:</b> Copy the key and paste it below.
+              <h2 style={{marginBottom: 16, fontSize:24}}>Connect Intelligence</h2>
+              <div style={{fontSize: 14, color: "#000", marginBottom: 16, textAlign: "left", lineHeight: "1.7", background: "#EBE7DD", padding: 16, borderRadius: 4}}>
+                <b>Step 1:</b> Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" style={{color:"#7A2A3B", fontWeight:"bold", textDecoration:"underline"}}>Google AI Studio</a><br/>
+                <b>Step 2:</b> Navigate: <b>Sign In &gt; Get API key &gt; Create API key</b><br/>
+                <b>Step 3:</b> Paste the key below.
                 
-                <div style={{marginTop: 12, paddingTop: 10, borderTop: "1px solid #ccc", fontSize: 12, lineHeight: "1.5"}}>
-                  <b style={{color: "#d85a30"}}>API Key Options:</b><br/>
-                  • <b>Free Tier:</b> Good for insights. Standard Google terms apply (prompts may be processed to improve services).<br/>
-                  • <b>Paid Tier (Pay-as-you-go):</b> Maximum Privacy. Google guarantees your prompts are never used for training. Costs &lt; ₹120/month.
+                <div style={{marginTop: 14, paddingTop: 12, borderTop: "1px dashed #C4BEAD", fontSize: 12, lineHeight: "1.6", color:"#5A544A", fontStyle:"italic"}}>
+                  Stored locally. Your data remains on this device.
                 </div>
               </div>
               <input 
                 type="text" 
-                placeholder="Paste your API key here..." 
+                placeholder="Paste API key here..." 
                 value={tempKey} 
                 onChange={(e) => setTempKey(e.target.value)}
-                style={{width: "100%", padding: "12px", marginBottom: 15, border: "1.5px solid #ccc", borderRadius: 6, boxSizing: "border-box", fontSize: 14}}
+                className="inp"
               />
-              <button onClick={saveKeyAndNext} className="pbtn" style={{background: "#3C3489", marginBottom: 10}}>Save Key & Continue</button>
-              <button onClick={() => setWelcomeStep(3)} style={{background: "none", border: "none", color: "#666", textDecoration: "underline", cursor: "pointer", fontSize: 12}}>Skip for now</button>
+              <button onClick={saveKeyAndNext} className="pbtn" style={{background: "#232528", marginBottom: 12}}>Save Key</button>
+              <button onClick={() => setWelcomeStep(3)} style={{background: "none", border: "none", color: "#888375", textDecoration: "underline", cursor: "pointer", fontSize: 13, fontStyle:"italic"}}>Skip for now</button>
             </div>
           )}
 
           {welcomeStep === 3 && (
             <div>
-              <h2 style={{color: "#3C3489", marginBottom: 15}}>🛡️ 100% Private</h2>
-              <p style={{fontSize: 14, color: "#444", marginBottom: 15, lineHeight: "1.5"}}>
-                <b>Your data never leaves this device, Human.</b> Nobody else can see your entries.
+              <h2 style={{marginBottom: 16, fontSize:24}}>Absolute Privacy</h2>
+              <p style={{fontSize: 15, color: "#000", marginBottom: 16, lineHeight: "1.6"}}>
+                <b>Your data never leaves this device.</b> Nobody else can see your entries.
               </p>
-              <div style={{background: "#F0EEF8", padding: 12, borderRadius: 8, marginBottom: 20, textAlign: "left"}}>
-                <p style={{fontSize: 12, color: "#3C3489", margin: 0, lineHeight: "1.5"}}>
-                  ⚠️ <b>Important:</b> If you clear your browser cache, your data will be erased. Use the <b>Export Backup</b> button in the ⚙️ <b>Settings</b> tab frequently to save your history!
+              <div style={{background: "#EBE7DD", padding: 16, borderRadius: 4, marginBottom: 24, textAlign: "left", borderLeft:"4px solid #7A2A3B"}}>
+                <p style={{fontSize: 13, color: "#4A443A", margin: 0, lineHeight: "1.6", fontStyle:"italic"}}>
+                  <b>Warning:</b> If you clear your browser cache, your history will be erased. Use the <b>Export Archive</b> button in the Config tab frequently!
                 </p>
               </div>
-              <button onClick={finishWelcome} className="pbtn" style={{background: "#3C3489"}}>Finish Setup & Enter App</button>
+              <button onClick={finishWelcome} className="pbtn" style={{background: "#232528"}}>Enter Chronicles</button>
             </div>
           )}
 
@@ -626,14 +642,13 @@ function App(){
       </div>
     )}
 
-    <div style={{background: "#1a1a2e", padding: "20px 16px 16px", borderRadius: "0 0 20px 20px", marginBottom: 16}}>
-      <p style={{fontSize: 11, color: "#8888aa", letterSpacing: 2, marginBottom: 4}}>MY CHRONICLES</p>
-      <p style={{fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 2}}>{greet}</p>
-      <p style={{fontSize: 13, color: "#8888aa"}}>{today}</p>
+    <div style={{padding: "30px 16px 20px", marginBottom: 10, textAlign:"center", borderBottom:"1px solid #D9D4C5"}}>
+      <h1 style={{fontSize: 32, fontWeight: 800, color: "#232528", marginBottom: 4, letterSpacing:1}}>MY CHRONICLES</h1>
+      <p style={{fontSize: 14, color: "#7A2A3B", fontStyle:"italic", fontWeight:700}}>{greet} <span style={{color:"#5A544A", fontWeight:400}}>{today}</span></p>
     </div>
 
     {/* MASTER APP RENDERING WITH INSTANT REACTIVITY */}
-    <div style={{padding: "0 12px"}}>
+    <div style={{padding: "10px 16px 0"}}>
       {tabs.map(t => (
         <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
           {t.id === "activity" ? <Activity/> :
@@ -649,8 +664,8 @@ function App(){
     {/* DYNAMIC NAVIGATION MENU */}
     <div className="nav">
       {tabs.map(t => <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
-        <span style={{fontSize: 18, color: tab === t.id ? "#1a1a2e" : "#ccc"}}>{t.icon}</span>
-        <span style={{fontSize: 10, fontFamily: "Georgia,serif", color: tab === t.id ? "#1a1a2e" : "#bbb", fontWeight: tab === t.id ? 600 : 400, letterSpacing: 0.5}}>{t.label}</span>
+        <span style={{fontSize: 20, color: tab === t.id ? "#7A2A3B" : "#A8A291", filter: tab === t.id ? "none" : "grayscale(100%)", transition:"0.2s"}}>{t.icon}</span>
+        <span style={{fontSize: 10, fontFamily: "'Merriweather',serif", color: tab === t.id ? "#7A2A3B" : "#A8A291", fontWeight: tab === t.id ? 700 : 400, letterSpacing: 1, textTransform:"uppercase", marginTop:2}}>{t.label}</span>
       </button>)}
     </div>
   </div>;
