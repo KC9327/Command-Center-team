@@ -429,13 +429,68 @@ const DEFAULT_TABS = [
 ];
 
 function App(){
-  const [tabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
+ const [tabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
   const tabs = JSON.parse(tabsStr);
   const [tab, setTab] = useState("activity");
+
+  // Logic to trigger the demo walkthrough
+  const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v7_final", "false");
+  const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
+  const [welcomeStep, setWelcomeStep] = useState(1);
+  const [tempIdentity, setTempIdentity] = useState("");
+
+  const finishWelcome = () => {
+    if(!tempIdentity.trim()) return alert("Please introduce yourself first.");
+    localStorage.setItem("sys_ctx", JSON.stringify(tempIdentity));
+    setHasVisited("true");
+    setShowWelcome(false);
+  };
+
   const hr = new Date().getHours();
   const greet = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
 
   return <div style={{maxWidth: 520, margin: "0 auto", paddingBottom: 90}}>
+    {showWelcome && (
+      <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.92)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
+        <div className="card" style={{textAlign: "center", width: "100%", maxWidth: 420}}>
+          {welcomeStep === 1 && (
+            <div>
+              <h2 style={{marginBottom: 16, fontSize:28, fontFamily:"'Playfair Display',serif"}}>The Chronicles</h2>
+              <p style={{fontSize: 15, color: "#000", marginBottom: 20, lineHeight: "1.6", textAlign:"left"}}>
+                To provide strategic coaching, the AI needs to know your current identity and goals.
+              </p>
+              <textarea className="inp" rows={4} placeholder="e.g. I am Krishna, a Senior Linguist mastering AI and fitness..." value={tempIdentity} onChange={(e) => setTempIdentity(e.target.value)} />
+              <button onClick={() => {if(tempIdentity.trim()) setWelcomeStep(2); else alert("Introduce yourself first!");}} className="pbtn" style={{background: "#7A2A3B"}}>Continue →</button>
+            </div>
+          )}
+          {welcomeStep === 2 && (
+            <div>
+              <h2 style={{marginBottom: 12, fontSize:22}}>Feature Tour: Logging</h2>
+              <div style={{textAlign:"left", fontSize:14, marginBottom:20, background:"#EBE7DD", padding:12, borderRadius:4}}>
+                <b>◎ Journal & ◈ Training:</b> Track time-based activities using the clock and duration modules.<br/><br/>
+                <b>₹ Ledger:</b> Separate your daily 'Spending' from 'Investments' to monitor your financial growth.
+              </div>
+              <button onClick={() => setWelcomeStep(3)} className="pbtn" style={{background: "#232528"}}>Next: Customization →</button>
+            </div>
+          )}
+          {welcomeStep === 3 && (
+            <div>
+              <h2 style={{marginBottom: 12, fontSize:22}}>Feature Tour: Config</h2>
+              <p style={{fontSize:14, textAlign:"left", marginBottom:20}}>
+                You have <b>6 Navigation Slots</b>. Go to <b>Config (⚙)</b> to:
+                <ul style={{marginTop:10, marginLeft:20}}>
+                  <li>Rename any tab or change its icon.</li>
+                  <li>Define unique tags for your sections.</li>
+                  <li>Update your identity as you evolve.</li>
+                </ul>
+              </p>
+              <button onClick={finishWelcome} className="pbtn" style={{background: "#7A2A3B"}}>Enter My Chronicles</button>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
     <div style={{padding: "30px 16px 20px", textAlign:"center", borderBottom:"1px solid #D9D4C5"}}>
       <h1 style={{fontSize: 32}}>MY CHRONICLES</h1>
       <p style={{fontSize: 14, fontStyle:"italic"}}>{greet}. {new Date().toLocaleDateString("en-US", {weekday:"long", month:"long", day:"numeric"})}</p>
