@@ -433,15 +433,17 @@ function App(){
   const tabs = JSON.parse(tabsStr);
   const [tab, setTab] = useState("activity");
 
-  // Logic to trigger the demo walkthrough
+  // NEW VERSION KEY (V7) TO TRIGGER RE-WALKTHROUGH
   const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v7_final", "false");
   const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
   const [welcomeStep, setWelcomeStep] = useState(1);
   const [tempIdentity, setTempIdentity] = useState("");
 
   const finishWelcome = () => {
-    if(!tempIdentity.trim()) return alert("Please introduce yourself first.");
-    localStorage.setItem("sys_ctx", JSON.stringify(tempIdentity));
+    // Only save identity if it wasn't skipped
+    if (tempIdentity.trim()) {
+      localStorage.setItem("sys_ctx", JSON.stringify(tempIdentity));
+    }
     setHasVisited("true");
     setShowWelcome(false);
   };
@@ -451,42 +453,57 @@ function App(){
 
   return <div style={{maxWidth: 520, margin: "0 auto", paddingBottom: 90}}>
     {showWelcome && (
-      <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.92)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
-        <div className="card" style={{textAlign: "center", width: "100%", maxWidth: 420}}>
+      <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.96)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
+        <div className="card" style={{textAlign: "center", width: "100%", maxWidth: 420, border: "1px solid #7A2A3B"}}>
+          
           {welcomeStep === 1 && (
             <div>
               <h2 style={{marginBottom: 16, fontSize:28, fontFamily:"'Playfair Display',serif"}}>The Chronicles</h2>
               <p style={{fontSize: 15, color: "#000", marginBottom: 20, lineHeight: "1.6", textAlign:"left"}}>
                 To provide strategic coaching, the AI needs to know your current identity and goals.
               </p>
-              <textarea className="inp" rows={4} placeholder="e.g. I am Krishna, a Senior Linguist mastering AI and fitness..." value={tempIdentity} onChange={(e) => setTempIdentity(e.target.value)} />
-              <button onClick={() => {if(tempIdentity.trim()) setWelcomeStep(2); else alert("Introduce yourself first!");}} className="pbtn" style={{background: "#7A2A3B"}}>Continue →</button>
+              <textarea 
+                className="inp" 
+                rows={4} 
+                placeholder="e.g. I am Krishna, a Senior Linguist mastering AI and fitness..."
+                value={tempIdentity}
+                onChange={(e) => setTempIdentity(e.target.value)}
+              />
+              <button onClick={() => {if(tempIdentity.trim()) setWelcomeStep(2); else alert("Please introduce yourself first or use Skip.");}} className="pbtn" style={{background: "#7A2A3B"}}>Continue →</button>
+              <button onClick={() => setWelcomeStep(2)} style={{background: "none", border: "none", color: "#888375", fontSize: 12, marginTop: 15, cursor: "pointer", textDecoration: "underline"}}>
+                Skip for now
+              </button>
+              <p style={{fontSize: 11, color: "#888375", marginTop: 10, fontStyle: "italic"}}>
+                (This can always be added later in the <b>Config (⚙)</b> tab under the <b>'Assistant Persona Rules'</b> box)
+              </p>
             </div>
           )}
+
           {welcomeStep === 2 && (
             <div>
-              <h2 style={{marginBottom: 12, fontSize:22}}>Feature Tour: Logging</h2>
-              <div style={{textAlign:"left", fontSize:14, marginBottom:20, background:"#EBE7DD", padding:12, borderRadius:4}}>
-                <b>◎ Journal & ◈ Training:</b> Track time-based activities using the clock and duration modules.<br/><br/>
-                <b>₹ Ledger:</b> Separate your daily 'Spending' from 'Investments' to monitor your financial growth.
+              <h2 style={{marginBottom: 16, fontSize:22, color: "#7A2A3B"}}>Safety & Privacy</h2>
+              <div style={{textAlign:"left", fontSize:14, marginBottom:20, background:"#EBE7DD", padding:15, borderRadius:4, borderLeft: "4px solid #7A2A3B"}}>
+                <p style={{marginBottom: 12}}><b>🔒 100% Private:</b> All your logs and persona data are stored directly in your browser's <b>Local Storage</b>.</p>
+                <p><b>⚠️ Safety Concern:</b> Since data is local, it will be lost if you clear your browser cache. Use the <b>'Export Archive'</b> button frequently in the Config tab to prevent data loss.</p>
               </div>
-              <button onClick={() => setWelcomeStep(3)} className="pbtn" style={{background: "#232528"}}>Next: Customization →</button>
+              <button onClick={() => setWelcomeStep(3)} className="pbtn" style={{background: "#232528"}}>I Understand →</button>
             </div>
           )}
+
           {welcomeStep === 3 && (
             <div>
-              <h2 style={{marginBottom: 12, fontSize:22}}>Feature Tour: Config</h2>
+              <h2 style={{marginBottom: 12, fontSize:22}}>Final Tour</h2>
               <p style={{fontSize:14, textAlign:"left", marginBottom:20}}>
-                You have <b>6 Navigation Slots</b>. Go to <b>Config (⚙)</b> to:
-                <ul style={{marginTop:10, marginLeft:20}}>
-                  <li>Rename any tab or change its icon.</li>
-                  <li>Define unique tags for your sections.</li>
-                  <li>Update your identity as you evolve.</li>
-                </ul>
+                You have <b>6 Navigation Slots</b>. Customize them in <b>Config (⚙)</b> to rename tabs, change icons, or define unique section tags.
               </p>
+              <div style={{textAlign:"left", fontSize:13, marginBottom:20, background:"#F8F7F2", padding:10, border: "1px solid #C4BEAD"}}>
+                • <b>Journal/Gym/Study:</b> Use the Time & Duration modules.<br/>
+                • <b>Ledger:</b> Track Spent vs. Invested currency.
+              </div>
               <button onClick={finishWelcome} className="pbtn" style={{background: "#7A2A3B"}}>Enter My Chronicles</button>
             </div>
           )}
+
         </div>
       </div>
     )}
