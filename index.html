@@ -283,6 +283,9 @@ function Settings(){
   const [inv, setInv] = useLocalStorage("sys_inv", "Skills, Health, Savings, Other");
   const [gym, setGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
   const [skill, setSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
+  
+  // NEW: Dynamic Custom Categories Builder
+  const [customCats, setCustomCats] = useLocalStorage("sys_custom_cats", []);
 
   const exportData = () => {
     const allData = {};
@@ -312,19 +315,61 @@ function Settings(){
     };
     reader.readAsText(file);
   };
+
+  // Logic to handle Add/Update/Delete of Custom Categories
+  const addCategory = () => {
+    setCustomCats([...customCats, { id: Date.now(), name: "New Category", tags: "Item 1, Item 2" }]);
+  };
+  const updateCat = (id, field, value) => {
+    setCustomCats(customCats.map(c => c.id === id ? { ...c, [field]: value } : c));
+  };
+  const deleteCat = (id) => {
+    setCustomCats(customCats.filter(c => c.id !== id));
+  };
   
   return <div>
     <div className="card" style={{border:"1.5px solid #3C3489", background: "#F0EEF8", textAlign: "center"}}>
       <h3 style={{marginBottom:8, color: "#3C3489", fontSize: "16px"}}>🛡️ Data Protection</h3>
       <p style={{fontSize:13, color:"#3C3489", marginBottom:12, lineHeight: "1.4"}}>
-        <b style={{textDecoration: "underline"}}>Your data is saved to this device only.</b><br/> 
-        Export a backup frequently to protect your history before clearing browser cache or website data.
+        <b style={{textDecoration: "underline"}}>Your data is saved to this device only, Human.</b><br/> 
+        Export a backup frequently to protect your history before clearing browser cache.
       </p>
       <button onClick={exportData} className="pbtn" style={{background:"#3C3489", margin: "5px 0"}}>📤 Export Backup File</button>
       <div style={{marginTop: 15, borderTop: "1px solid #D1CDE9", paddingTop: 10}}>
         <span className="lbl" style={{color: "#3C3489", marginBottom: 8, display: "block"}}>Restore from Backup</span>
         <input type="file" accept=".json" onChange={importData} style={{fontSize: "11px", color: "#3C3489", width: "100%"}}/>
       </div>
+    </div>
+
+    {/* CUSTOM CATEGORIES BUILDER */}
+    <div className="card" style={{border:"2px solid #3C3489"}}>
+      <h3 style={{marginBottom:10, color: "#3C3489"}}>➕ Build Your Own Categories</h3>
+      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Add personalized lists (e.g., "Spirit", "Hobbies")</p>
+      
+      {customCats.map(c => (
+        <div key={c.id} style={{marginBottom: 15, padding: "12px", border: "1px dashed #3C3489", borderRadius: 8, background: "#fafafa"}}>
+          <div style={{display: "flex", justifyContent: "space-between", marginBottom: 8}}>
+            <input 
+              value={c.name} 
+              onChange={e => updateCat(c.id, "name", e.target.value)} 
+              style={{fontWeight: "bold", border: "none", borderBottom: "1px solid #3C3489", background: "transparent", width: "70%", fontSize: 15, color: "#3C3489", outline: "none"}} 
+              placeholder="Category Name (e.g., Spirit)"
+            />
+            <button onClick={() => deleteCat(c.id)} style={{color: "#d85a30", background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "bold"}}>❌ Delete</button>
+          </div>
+          <span className="lbl">Items (comma separated)</span>
+          <input 
+            value={c.tags} 
+            onChange={e => updateCat(c.id, "tags", e.target.value)} 
+            className="inp" 
+            placeholder="e.g., Prayer, Bible, Worship"
+          />
+        </div>
+      ))}
+      
+      <button onClick={addCategory} className="pbtn" style={{background: "#fff", color: "#3C3489", border: "1.5px solid #3C3489", marginTop: 5, fontWeight: "bold"}}>
+        + Add New Category
+      </button>
     </div>
 
     <div className="card" style={{border:"1px solid #1a1a2e", marginTop: 20}}>
@@ -334,7 +379,7 @@ function Settings(){
     </div>
     
     <div className="card">
-      <h3 style={{marginBottom:10}}>Custom Categories</h3>
+      <h3 style={{marginBottom:10}}>System Default Categories</h3>
       <p style={{fontSize:12,color:"#666",marginBottom:12}}>Separate items with commas (,)</p>
       <span className="lbl">Activity Tracker</span>
       <input value={act} onChange={e=>setAct(e.target.value)} className="inp"/>
@@ -349,14 +394,6 @@ function Settings(){
     </div>
   </div>;
 }
-  
-const TABS=[
-  {id:"activity",icon:"◎",label:"Activity"},
-  {id:"finance",icon:"₹",label:"Finance"},
-  {id:"gym",icon:"◈",label:"Gym"},
-  {id:"skills",icon:"◐",label:"Skills"},
-  {id:"settings",icon:"⚙",label:"Settings"}
-];
 
 function App(){
   const [tab, setTab] = useState("activity");
