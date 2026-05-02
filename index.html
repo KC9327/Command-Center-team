@@ -227,8 +227,66 @@ function Activity(){
   return <GenericLogger sectionId="activity" title="Journal" icon="◎" tagsStr={actStr} />;
 }
 function Finance(){
+  const [expenses,setExpenses]=useLocalStorage("fin_exp",[]); 
+  const [invs,setInvs]=useLocalStorage("fin_inv",[]);
   const [expStr]=useLocalStorage("sys_exp","Food, Transport, Bills, Family, Fun, Other");
-  return <GenericLogger sectionId="finance" title="Ledger" icon="₹" tagsStr={expStr} />;
+  const [invStr]=useLocalStorage("sys_inv","Skills, Health, Savings, Other");
+  
+  const [tab,setTab]=useState("exp");
+  const [ed,setEd]=useState(""); const [ea,setEa]=useState(""); const [ec,setEc]=useState(null);
+  const [id,setId]=useState(""); const [ia,setIa]=useState(""); const [ic,setIc]=useState(null);
+
+  const ECATS = expStr.split(",").map(s=>s.trim()).filter(x=>x);
+  const ICATS = invStr.split(",").map(s=>s.trim()).filter(x=>x);
+
+  const te = expenses.reduce((s,e)=>s+parseFloat(e.a||0),0); 
+  const ti = invs.reduce((s,e)=>s+parseFloat(e.a||0),0);
+  
+  function addE(){if(!ed||!ea||!ec)return alert("Fill all fields");setExpenses([...expenses,{id:Date.now(),d:ed,a:ea,c:ec}]);setEd("");setEa("");setEc(null);}
+  function addI(){if(!id||!ia||!ic)return alert("Fill all fields");setInvs([...invs,{id:Date.now(),d:id,a:ia,c:ic}]);setId("");setIa("");setIc(null);}
+  
+  const log = "Expenses:\n"+expenses.map(e=>`- ${e.c}: ${e.d} ₹${e.a}`).join("\n") + "\nInvestments:\n"+invs.map(e=>`- ${e.c}: ${e.d} ₹${e.a}`).join("\n");
+
+  return <div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
+      <div className="card" style={{textAlign:"center", background:"#7A2A3B", color:"#F8F7F2", border:"none"}}>
+        <div style={{fontSize:24, fontFamily:"'Playfair Display',serif"}}>Rs.{te}</div>
+        <div style={{fontSize:11, marginTop:4}}>Spent today</div>
+      </div>
+      <div className="card" style={{textAlign:"center", background:"#3A4533", color:"#F8F7F2", border:"none"}}>
+        <div style={{fontSize:24, fontFamily:"'Playfair Display',serif"}}>Rs.{ti}</div>
+        <div style={{fontSize:11, marginTop:4}}>Invested today</div>
+      </div>
+    </div>
+
+    <div style={{display:"flex",gap:8,marginBottom:14}}>
+      <button onClick={()=>setTab("exp")} className="pbtn" style={{flex:1, background:tab==="exp"?"#232528":"#F8F7F2", color:tab==="exp"?"#F8F7F2":"#5A544A", border:tab==="exp"?"none":"1px solid #C4BEAD", marginTop:0}}>Expense</button>
+      <button onClick={()=>setTab("inv")} className="pbtn" style={{flex:1, background:tab==="inv"?"#232528":"#F8F7F2", color:tab==="inv"?"#F8F7F2":"#5A544A", border:tab==="inv"?"none":"1px solid #C4BEAD", marginTop:0}}>Investment</button>
+    </div>
+
+    <div className="card">
+      <span className="lbl">Category</span>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>
+        {tab==="exp" ? ECATS.map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>) : ICATS.map(c=><Tag key={c} label={c} sel={ic===c} onClick={()=>setIc(c)} bg="#EBECE7" tx="#3A4533" br="#69785D"/>)}
+      </div>
+      <span className="lbl">Description</span>
+      <input value={tab==="exp"?ed:id} onChange={e=>tab==="exp"?setEd(e.target.value):setId(e.target.value)} placeholder="e.g. Dmart groceries" className="inp"/>
+      <span className="lbl">Amount (Rs.)</span>
+      <input type="number" value={tab==="exp"?ea:ia} onChange={e=>tab==="exp"?setEa(e.target.value):setIa(e.target.value)} placeholder="0" className="inp" style={{width:120}}/>
+      <button onClick={tab==="exp"?addE:addI} className="pbtn" style={{background:tab==="exp"?"#7A2A3B":"#3A4533"}}>+ Add {tab==="exp"?"expense":"investment"}</button>
+    </div>
+
+    <div className="card">
+      <span className="lbl">History</span>
+      {(tab==="exp"?expenses:invs).map(e=>(
+        <div key={e.id} style={{display:"flex", justifyContent:"space-between", padding:"10px 0", borderBottom:"1px solid #EBE7DD"}}>
+          <div style={{fontSize:14}}>{e.d} <span style={{fontSize:10, color:"#888375", marginLeft:5}}>{e.c}</span></div>
+          <div style={{fontWeight:700}}>₹{e.a} <button onClick={()=>{tab==="exp"?setExpenses(expenses.filter(x=>x.id!==e.id)):setInvs(invs.filter(x=>x.id!==e.id))}} className="dbtn" style={{float:"none", marginLeft:10}}>×</button></div>
+        </div>
+      ))}
+    </div>
+    <AIBtn label="Ledger Analysis" prompt={log} />
+  </div>;
 }
 function Gym(){
   const [gymStr]=useLocalStorage("sys_gym","Push, Pull, Legs, Core, Cardio, Rest");
