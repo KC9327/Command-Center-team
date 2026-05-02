@@ -284,7 +284,6 @@ function Settings(){
   const [gym, setGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
   const [skill, setSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
   
-  // FIX: Safety Parser to handle complex lists without crashing React
   const [customCatsStr, setCustomCatsStr] = useLocalStorage("sys_custom_cats", "[]");
   let customCats = [];
   try { customCats = JSON.parse(customCatsStr); } catch(e) { customCats = []; }
@@ -402,6 +401,15 @@ function Settings(){
 }
 
 function App(){
+  // SAFETY FIX: Menus are secured here inside the app.
+  const TABS = [
+    { id: "activity", icon: "◎", label: "Activity" },
+    { id: "finance", icon: "₹", label: "Finance" },
+    { id: "gym", icon: "◈", label: "Gym" },
+    { id: "skills", icon: "◑", label: "Skills" },
+    { id: "settings", icon: "⚙", label: "Settings" }
+  ];
+
   const [tab, setTab] = useState("activity");
   const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6_final", "false");
   const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
