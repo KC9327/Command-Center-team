@@ -283,35 +283,73 @@ function Settings(){
   const [inv, setInv] = useLocalStorage("sys_inv", "Skills, Health, Savings, Other");
   const [gym, setGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
   const [skill, setSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
+
+  const exportData = () => {
+    const allData = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      allData[key] = localStorage.getItem(key);
+    }
+    const blob = new Blob([JSON.stringify(allData)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `CommandCenter_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+  };
+
+  const importData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        Object.keys(data).forEach(key => { localStorage.setItem(key, data[key]); });
+        alert("✅ Data Restored Successfully! Refreshing the page now...");
+        window.location.reload();
+      } catch (err) { alert("❌ This file is not a valid backup."); }
+    };
+    reader.readAsText(file);
+  };
   
   return <div>
-    <div className="card" style={{border:"1px solid #1a1a2e"}}>
-      <h3 style={{marginBottom:10}}>Setup Your Assistant</h3>
-      <span className="lbl">AI Persona & Rules (Who are you? What are your goals?)</span>
-      <textarea rows={4} value={ctx} onChange={e=>setCtx(e.target.value)} className="inp" placeholder="e.g., I am a 25yo designer trying to save money and learn Spanish..."/>
+    <div className="card" style={{border:"1.5px solid #3C3489", background: "#F0EEF8", textAlign: "center"}}>
+      <h3 style={{marginBottom:8, color: "#3C3489", fontSize: "16px"}}>🛡️ Data Protection</h3>
+      <p style={{fontSize:13, color:"#3C3489", marginBottom:12, lineHeight: "1.4"}}>
+        <b style={{textDecoration: "underline"}}>Your data is saved to this device only.</b><br/> 
+        Export a backup frequently to protect your history before clearing browser cache or website data.
+      </p>
+      <button onClick={exportData} className="pbtn" style={{background:"#3C3489", margin: "5px 0"}}>📤 Export Backup File</button>
+      <div style={{marginTop: 15, borderTop: "1px solid #D1CDE9", paddingTop: 10}}>
+        <span className="lbl" style={{color: "#3C3489", marginBottom: 8, display: "block"}}>Restore from Backup</span>
+        <input type="file" accept=".json" onChange={importData} style={{fontSize: "11px", color: "#3C3489", width: "100%"}}/>
+      </div>
     </div>
+
+    <div className="card" style={{border:"1px solid #1a1a2e", marginTop: 20}}>
+      <h3 style={{marginBottom:10}}>Setup Your Assistant</h3>
+      <span className="lbl">AI Persona & Rules</span>
+      <textarea rows={4} value={ctx} onChange={e=>setCtx(e.target.value)} className="inp" placeholder="e.g., I am a translator working in Hyderabad..."/>
+    </div>
+    
     <div className="card">
       <h3 style={{marginBottom:10}}>Custom Categories</h3>
       <p style={{fontSize:12,color:"#666",marginBottom:12}}>Separate items with commas (,)</p>
-      
-      <span className="lbl">Activity Tracker Categories</span>
+      <span className="lbl">Activity Tracker</span>
       <input value={act} onChange={e=>setAct(e.target.value)} className="inp"/>
-      
-      <span className="lbl">Expense Categories</span>
+      <span className="lbl">Expenses</span>
       <input value={exp} onChange={e=>setExp(e.target.value)} className="inp"/>
-      
-      <span className="lbl">Investment Categories</span>
+      <span className="lbl">Investments</span>
       <input value={inv} onChange={e=>setInv(e.target.value)} className="inp"/>
-
-      <span className="lbl">Gym/Health Focus</span>
+      <span className="lbl">Gym Focus</span>
       <input value={gym} onChange={e=>setGym(e.target.value)} className="inp"/>
-
-      <span className="lbl">Skill/Study Subjects</span>
+      <span className="lbl">Learning Subjects</span>
       <input value={skill} onChange={e=>setSkill(e.target.value)} className="inp"/>
     </div>
   </div>;
 }
-
+  
 const TABS=[
   {id:"activity",icon:"◎",label:"Activity"},
   {id:"finance",icon:"₹",label:"Finance"},
