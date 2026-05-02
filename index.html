@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
 <title>Daily Command Center</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js">
+<script src="https://unpkg.com/@babel/standalone/babel.min.js">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Georgia,serif;background:#f5f5f0;padding-bottom:80px}
@@ -24,9 +24,9 @@ body{font-family:Georgia,serif;background:#f5f5f0;padding-bottom:80px}
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel" data-presets="react">
 const {useState, useEffect} = React;
 
+// UPGRADE 1: Instant Memory Sync across all tabs
 function useLocalStorage(key, init) {
   const [val, setVal] = useState(() => {
     try {
@@ -34,14 +34,23 @@ function useLocalStorage(key, init) {
       return x !== null ? JSON.parse(x) : init;
     } catch(e) { return init; }
   });
+
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.detail && e.detail.key === key) setVal(e.detail.val);
+    };
+    window.addEventListener("local-storage-sync", handleStorage);
+    return () => window.removeEventListener("local-storage-sync", handleStorage);
+  }, [key]);
+
   const save = (v) => {
     setVal(v);
     try { window.localStorage.setItem(key, JSON.stringify(v)); } catch(e) {}
+    window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key, val: v } }));
   };
   return [val, save];
 }
 
-// Auto-assign colors to user-defined categories
 const PALETTE=[
   {bg:"#F0EEF8",tx:"#3C3489",br:"#9B8FD9"},{bg:"#EAF3DE",tx:"#27500A",br:"#639922"},
   {bg:"#E6F1FB",tx:"#0C447C",br:"#378ADD"},{bg:"#E1F5EE",tx:"#085041",br:"#1D9E75"},
@@ -121,16 +130,13 @@ function AIBtn({prompt,label}){
 function Activity(){
   const [entries,setEntries]=useLocalStorage("act_entries",[]);
   
-  // 1. Load Default Categories
   const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Commute, Break, Admin");
   const defCats = actStr.split(",").map((c,i)=>({n:c.trim(), ...PALETTE[i%PALETTE.length]}));
   
-  // 2. Load Custom Built Categories
   const [customCatsStr] = useLocalStorage("sys_custom_cats", "[]");
   let customCats = [];
   try { customCats = JSON.parse(customCatsStr); } catch(e) { customCats = []; }
 
-  // 3. Combine them to generate beautiful colors for charts
   const ALL_CATS = [...defCats];
   let colorIndex = defCats.length;
   customCats.forEach(cc => {
@@ -172,13 +178,11 @@ function Activity(){
       <span className="lbl">What did you do?</span>
       <textarea rows={2} value={text} onChange={e=>setText(e.target.value)} placeholder="Describe the activity..." className="inp"/>
       
-      {/* DEFAULT CATEGORIES */}
       <span className="lbl">Standard Category</span>
       <div style={{display:"flex",flexWrap:"wrap",marginBottom:4}}>
         {defCats.map(c=><Tag key={c.n} label={c.n} sel={cat===c.n} onClick={()=>setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br}/>)}
       </div>
 
-      {/* CUSTOM BUILT CATEGORIES */}
       {customCats.map(cc => {
          const items = cc.tags.split(",").map(t => t.trim()).filter(t=>t);
          if(items.length === 0) return null;
@@ -320,6 +324,26 @@ function Skills(){
   </div>;
 }
 
+// UPGRADE 2: Auto-generates a clean Journal for any custom tabs you build
+function CustomTab({ id, title, icon }) {
+  const [text, setText] = useLocalStorage(`custom_tab_${id}`, "");
+  return <div>
+    <div className="card">
+      <h3 style={{marginBottom:10, color:"#3C3489"}}>{icon} {title} Journal</h3>
+      <p style={{fontSize: 12, color:"#666", marginBottom: 12}}>A dedicated space to log thoughts and progress.</p>
+      <textarea rows={15} value={text} onChange={e=>setText(e.target.value)} className="inp" placeholder={`Type your ${title} entries here...`} style={{fontSize: 14, lineHeight: "1.6"}}/>
+    </div>
+  </div>;
+}
+
+const DEFAULT_TABS = [
+  { id: "activity", icon: "◎", label: "Activity", core: true },
+  { id: "finance", icon: "₹", label: "Finance", core: true },
+  { id: "gym", icon: "◈", label: "Gym", core: true },
+  { id: "skills", icon: "◑", label: "Skills", core: true },
+  { id: "settings", icon: "⚙", label: "Settings", core: true }
+];
+
 function Settings(){
   const [ctx, setCtx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Keep responses direct, warm, and max 250 words.");
   const [act, setAct] = useLocalStorage("sys_act", "Deep work, Meetings, Commute, Break, Admin");
@@ -328,9 +352,27 @@ function Settings(){
   const [gym, setGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
   const [skill, setSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
   
+  // Custom Categories Logic with manual save
   const [customCatsStr, setCustomCatsStr] = useLocalStorage("sys_custom_cats", "[]");
-  let customCats = [];
-  try { customCats = JSON.parse(customCatsStr); } catch(e) { customCats = []; }
+  const [draftCats, setDraftCats] = useState(() => {
+    try { return JSON.parse(customCatsStr); } catch(e) { return []; }
+  });
+
+  const saveCategories = () => {
+    setCustomCatsStr(JSON.stringify(draftCats));
+    alert("✅ Categories Saved & Synced instantly, Human.");
+  };
+
+  // Tab Manager Logic
+  const [tabsStr, setTabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
+  const [draftTabs, setDraftTabs] = useState(() => {
+    try { return JSON.parse(tabsStr); } catch(e) { return DEFAULT_TABS; }
+  });
+
+  const saveTabs = () => {
+    setTabsStr(JSON.stringify(draftTabs));
+    alert("✅ Navigation Tabs Updated!");
+  };
 
   const exportData = () => {
     const allData = {};
@@ -360,21 +402,6 @@ function Settings(){
     };
     reader.readAsText(file);
   };
-
-  const addCategory = () => {
-    const newCats = [...customCats, { id: Date.now(), name: "New Category", tags: "Item 1, Item 2" }];
-    setCustomCatsStr(JSON.stringify(newCats));
-  };
-  
-  const updateCat = (id, field, value) => {
-    const newCats = customCats.map(c => c.id === id ? { ...c, [field]: value } : c);
-    setCustomCatsStr(JSON.stringify(newCats));
-  };
-  
-  const deleteCat = (id) => {
-    const newCats = customCats.filter(c => c.id !== id);
-    setCustomCatsStr(JSON.stringify(newCats));
-  };
   
   return <div>
     <div className="card" style={{border:"1.5px solid #3C3489", background: "#F0EEF8", textAlign: "center"}}>
@@ -390,35 +417,53 @@ function Settings(){
       </div>
     </div>
 
-    {/* CUSTOM CATEGORIES BUILDER */}
+    {/* THE TAB MANAGER */}
+    <div className="card" style={{border:"2px solid #1a1a2e"}}>
+      <h3 style={{marginBottom:10, color: "#1a1a2e"}}>📱 Manage Navigation Tabs</h3>
+      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Remove default tools or add custom journals.</p>
+      {draftTabs.map((t, idx) => (
+        <div key={t.id} style={{display: "flex", gap: 6, marginBottom: 8}}>
+          <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 50, textAlign: "center", marginBottom: 0}} />
+          <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0}} disabled={t.id === "settings"} />
+          {t.id !== "settings" && (
+            <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color: "#d85a30", background: "none", border: "none", cursor: "pointer", fontWeight: "bold", padding: "0 10px"}}>❌</button>
+          )}
+        </div>
+      ))}
+      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Tab", core: false }])} className="pbtn" style={{background: "#fff", color: "#1a1a2e", border: "1.5px solid #1a1a2e", marginTop: 5, fontWeight: "bold"}}>+ Add New Tab</button>
+      <button onClick={saveTabs} className="pbtn" style={{background: "#1a1a2e", marginTop: 10}}>💾 Save Tabs</button>
+    </div>
+
+    {/* CATEGORIES BUILDER */}
     <div className="card" style={{border:"2px solid #3C3489"}}>
       <h3 style={{marginBottom:10, color: "#3C3489"}}>➕ Build Your Own Categories</h3>
-      <p style={{fontSize:12,color:"#666",marginBottom:12}}>Add personalized lists (e.g., "Spirit", "Hobbies")</p>
+      <p style={{fontSize:12,color:"#666",marginBottom:12}}>These will appear in your Activity log.</p>
       
-      {customCats.map(c => (
+      {draftCats.map(c => (
         <div key={c.id} style={{marginBottom: 15, padding: "12px", border: "1px dashed #3C3489", borderRadius: 8, background: "#fafafa"}}>
           <div style={{display: "flex", justifyContent: "space-between", marginBottom: 8}}>
             <input 
               value={c.name} 
-              onChange={e => updateCat(c.id, "name", e.target.value)} 
+              onChange={e => { const n = [...draftCats]; n.find(x=>x.id===c.id).name = e.target.value; setDraftCats(n); }} 
               style={{fontWeight: "bold", border: "none", borderBottom: "1px solid #3C3489", background: "transparent", width: "70%", fontSize: 15, color: "#3C3489", outline: "none"}} 
               placeholder="Category Name"
             />
-            <button onClick={() => deleteCat(c.id)} style={{color: "#d85a30", background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "bold"}}>❌ Delete</button>
+            <button onClick={() => setDraftCats(draftCats.filter(x=>x.id!==c.id))} style={{color: "#d85a30", background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "bold"}}>❌ Delete</button>
           </div>
           <span className="lbl">Items (comma separated)</span>
           <input 
             value={c.tags} 
-            onChange={e => updateCat(c.id, "tags", e.target.value)} 
+            onChange={e => { const n = [...draftCats]; n.find(x=>x.id===c.id).tags = e.target.value; setDraftCats(n); }} 
             className="inp" 
             placeholder="e.g., Prayer, Bible, Worship"
           />
         </div>
       ))}
       
-      <button onClick={addCategory} className="pbtn" style={{background: "#fff", color: "#3C3489", border: "1.5px solid #3C3489", marginTop: 5, fontWeight: "bold"}}>
+      <button onClick={() => setDraftCats([...draftCats, { id: Date.now(), name: "New Category", tags: "Item 1, Item 2" }])} className="pbtn" style={{background: "#fff", color: "#3C3489", border: "1.5px solid #3C3489", marginTop: 5, fontWeight: "bold"}}>
         + Add New Category
       </button>
+      <button onClick={saveCategories} className="pbtn" style={{background: "#3C3489", marginTop: 10}}>💾 Save Categories</button>
     </div>
 
     <div className="card" style={{border:"1px solid #1a1a2e", marginTop: 20}}>
@@ -444,16 +489,11 @@ function Settings(){
   </div>;
 }
 
-// GLOBAL DEFINITION TO PREVENT MENU ERRORS
-const TABS = [
-  { id: "activity", icon: "◎", label: "Activity" },
-  { id: "finance", icon: "₹", label: "Finance" },
-  { id: "gym", icon: "◈", label: "Gym" },
-  { id: "skills", icon: "◑", label: "Skills" },
-  { id: "settings", icon: "⚙", label: "Settings" }
-];
-
 function App(){
+  const [tabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
+  let tabs = DEFAULT_TABS;
+  try { tabs = JSON.parse(tabsStr); } catch(e) {}
+
   const [tab, setTab] = useState("activity");
   const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6_final", "false");
   const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
@@ -553,10 +593,18 @@ function App(){
       <div style={{display: tab === "gym" ? "block" : "none"}}><Gym/></div>
       <div style={{display: tab === "skills" ? "block" : "none"}}><Skills/></div>
       <div style={{display: tab === "settings" ? "block" : "none"}}><Settings/></div>
+      
+      {/* Renders Custom Tabs Automatically */}
+      {tabs.filter(t => !t.core).map(t => (
+        <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
+          <CustomTab id={t.id} title={t.label} icon={t.icon} />
+        </div>
+      ))}
     </div>
 
+    {/* DYNAMIC NAVIGATION MENU */}
     <div className="nav">
-      {TABS.map(t => <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
+      {tabs.map(t => <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
         <span style={{fontSize: 18, color: tab === t.id ? "#1a1a2e" : "#ccc"}}>{t.icon}</span>
         <span style={{fontSize: 10, fontFamily: "Georgia,serif", color: tab === t.id ? "#1a1a2e" : "#bbb", fontWeight: tab === t.id ? 600 : 400, letterSpacing: 0.5}}>{t.label}</span>
       </button>)}
