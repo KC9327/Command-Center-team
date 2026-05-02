@@ -120,9 +120,27 @@ function AIBtn({prompt,label}){
 
 function Activity(){
   const [entries,setEntries]=useLocalStorage("act_entries",[]);
-  const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Commute, Break, Admin");
-  const CATS = actStr.split(",").map((c,i)=>({n:c.trim(), ...PALETTE[i%PALETTE.length]}));
   
+  // 1. Load Default Categories
+  const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Commute, Break, Admin");
+  const defCats = actStr.split(",").map((c,i)=>({n:c.trim(), ...PALETTE[i%PALETTE.length]}));
+  
+  // 2. Load Custom Built Categories
+  const [customCatsStr] = useLocalStorage("sys_custom_cats", "[]");
+  let customCats = [];
+  try { customCats = JSON.parse(customCatsStr); } catch(e) { customCats = []; }
+
+  // 3. Combine them to generate beautiful colors for charts
+  const ALL_CATS = [...defCats];
+  let colorIndex = defCats.length;
+  customCats.forEach(cc => {
+     const items = cc.tags.split(",").map(t => t.trim()).filter(t => t);
+     items.forEach(item => {
+         ALL_CATS.push({ n: item, ...PALETTE[colorIndex % PALETTE.length] });
+         colorIndex++;
+     });
+  });
+
   const [text,setText]=useState(""); const [cat,setCat]=useState(null);
   const [h,setH]=useState(0);const [m,setM]=useState(30);
   const [time,setTime]=useState(()=>{const n=new Date();return String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");});
@@ -147,22 +165,48 @@ function Activity(){
         <div style={{fontSize:12,color:"#aaa",marginTop:2}}>Tracked</div>
       </div>
     </div>
+
     <div className="card">
       <span className="lbl">Start time</span>
       <input type="time" value={time} onChange={e=>setTime(e.target.value)} className="inp" style={{width:"auto"}}/>
       <span className="lbl">What did you do?</span>
       <textarea rows={2} value={text} onChange={e=>setText(e.target.value)} placeholder="Describe the activity..." className="inp"/>
-      <span className="lbl">Category</span>
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{CATS.map(c=><Tag key={c.n} label={c.n} sel={cat===c.n} onClick={()=>setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br}/>)}</div>
-      <span className="lbl">Duration</span>
-      <Dur h={h} m={m} sh={setH} sm={setM}/>
+      
+      {/* DEFAULT CATEGORIES */}
+      <span className="lbl">Standard Category</span>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:4}}>
+        {defCats.map(c=><Tag key={c.n} label={c.n} sel={cat===c.n} onClick={()=>setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br}/>)}
+      </div>
+
+      {/* CUSTOM BUILT CATEGORIES */}
+      {customCats.map(cc => {
+         const items = cc.tags.split(",").map(t => t.trim()).filter(t=>t);
+         if(items.length === 0) return null;
+         return (
+            <div key={cc.id} style={{marginTop: 10}}>
+              <span className="lbl" style={{color: "#3C3489"}}>{cc.name}</span>
+              <div style={{display:"flex",flexWrap:"wrap",marginBottom:4}}>
+                {items.map(item => {
+                   const tCat = ALL_CATS.find(x => x.n === item);
+                   return <Tag key={item} label={item} sel={cat===item} onClick={()=>setCat(item)} bg={tCat?.bg} tx={tCat?.tx} br={tCat?.br}/>
+                })}
+              </div>
+            </div>
+         );
+      })}
+
+      <div style={{marginTop: 12}}>
+        <span className="lbl">Duration</span>
+        <Dur h={h} m={m} sh={setH} sm={setM}/>
+      </div>
       <button onClick={add} className="pbtn" style={{background:"#1a1a2e"}}>+ Log activity</button>
     </div>
+
     {entries.length>0&&<>
       <div className="card">
         <span className="lbl">Time breakdown</span>
         {Object.entries(grp).sort((a,b)=>b[1]-a[1]).map(([c,mins])=>{
-          const ct=CATS.find(x=>x.n===c);
+          const ct=ALL_CATS.find(x=>x.n===c);
           return <div key={c} style={{marginBottom:10}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:13}}>{c}</span><span style={{fontSize:13,color:"#888"}}>{Math.floor(mins/60)}h {mins%60}m</span></div>
             <div style={{height:6,background:"#f0f0f0",borderRadius:4}}><div style={{height:6,width:Math.round((mins/total)*100)+"%",background:ct?.br||"#534AB7",borderRadius:4}}/></div>
@@ -170,7 +214,7 @@ function Activity(){
         })}
       </div>
       {[...entries].reverse().map(e=>{
-        const c=CATS.find(x=>x.n===e.cat);
+        const c=ALL_CATS.find(x=>x.n===e.cat);
         return <div key={e.id} className="card">
           <button className="dbtn" onClick={()=>setEntries(entries.filter(x=>x.id!==e.id))}>x</button>
           <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:c?.bg||"#eee",color:c?.tx||"#333"}}>{e.cat}</span>
