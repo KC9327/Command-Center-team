@@ -320,7 +320,6 @@ function Settings(){
   const [draftGym, setDraftGym] = useState(sysGym);
   const [draftSkill, setDraftSkill] = useState(sysSkill);
 
-  // CHANGE TRACKING FOR ALL CONFIGS
   const hasConfigChanges = draftCtx !== sysCtx || draftAct !== sysAct || draftExp !== sysExp || draftInv !== sysInv || draftGym !== sysGym || draftSkill !== sysSkill;
 
   const saveSystemDefaults = () => {
@@ -371,59 +370,61 @@ function Settings(){
   };
   
   return <div>
-    <div className="card" style={{border:"1px solid #C4BEAD", background: "#EBE7DD", textAlign: "center"}}>
-      <h3 style={{marginBottom:8, color: "#4A443A", fontSize: "20px"}}>Archive Protection</h3>
-      <button onClick={exportData} className="pbtn" style={{background:"#232528", margin: "5px 0"}}>📥 Export Archive</button>
-      <div style={{marginTop: 18, borderTop: "1px dashed #C4BEAD", paddingTop: 14}}>
+    <div className="card" style={{textAlign: "center", border: "1.5px dashed #C7C7CC"}}>
+      <h3 style={{marginBottom:8, fontSize: "20px"}}>Archive Protection</h3>
+      <p style={{fontSize: 11, color: "#8E8E93", marginBottom: 15, fontStyle: "italic"}}>
+        💡 Tip: Export often to keep a backup. Import to restore your data on any device.
+      </p>
+      <div style={{display:"flex", gap:8}}>
+        <button onClick={exportData} className="pbtn" style={{flex:1, marginTop:0}}>📥 Export Archive</button>
+        <button onClick={() => { if(window.confirm("Erase all data?")){ localStorage.clear(); window.location.reload(); } }} className="pbtn" style={{flex:1, background:"#FF3B30", marginTop:0}}>🗑️ Reset App</button>
+      </div>
+      <div style={{marginTop: 18, borderTop: "1px dashed #D9D4C5", paddingTop: 14}}>
         <input type="file" accept=".json" onChange={importData} style={{fontSize: "12px", width: "100%"}}/>
       </div>
     </div>
 
-    <div className="card" style={{borderTop:"3px solid #232528"}}>
-      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10}}>
-        <h3 style={{color: "#232528", fontSize:20}}>Activity Sections</h3>
-        <span style={{fontSize:10, color: draftTabs.length >= 6 ? "#7A2A3B" : "#888375", fontWeight:700}}>{draftTabs.length}/6 SLOTS</span>
+    <div className="card">
+      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:15}}>
+        <h3 style={{fontSize:20}}>Activity Sections</h3>
+        <span style={{fontSize:11, color: "#8E8E93", fontWeight:700}}>{draftTabs.length}/6 SLOTS</span>
       </div>
+      <p style={{fontSize: 11, color: "#8E8E93", marginBottom: 12, fontStyle: "italic"}}>
+        💡 Walkthrough: Customize your icons, names, and tags for each section below.
+      </p>
       {draftTabs.map((t, idx) => (
-        <div key={t.id} style={{marginBottom: 16, padding: "10px", background: "#F8F7F2", border: "1px solid #C4BEAD", borderRadius: 4}}>
+        <div key={t.id} style={{marginBottom: 16, padding: "14px", background: "#F2F2F7", borderRadius: 16}}>
           <div style={{display: "flex", gap: 8, marginBottom: 8}}>
-            <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 50, textAlign: "center", marginBottom: 0}} />
+            <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 55, textAlign: "center", marginBottom: 0}} />
             <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0}} disabled={t.id === "settings"} />
-            {t.id !== "settings" && <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color: "#A8A291", border: "none", background: "none", fontSize:18}}>×</button>}
+            {t.id !== "settings" && <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color: "#C7C7CC", border: "none", background: "none", fontSize:20}}>×</button>}
           </div>
-          <span className="lbl" style={{fontSize: 9}}>Section Tags (For Custom Tabs)</span>
-          <input value={t.tags || ""} onChange={e => { const n = [...draftTabs]; n[idx].tags = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0, padding: 8, fontSize: 12}} placeholder="e.g. Prayer, Meditation..." />
+          <span className="lbl" style={{fontSize: 9, marginBottom: 4}}>Section Tags (For Custom Tabs)</span>
+          <input value={t.tags || ""} onChange={e => { const n = [...draftTabs]; n[idx].tags = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0, padding: 10, fontSize: 13}} placeholder="e.g. Prayer, Meditation..." />
         </div>
       ))}
       {draftTabs.length < 6 && (
-        <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Tab", tags: "General" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528", marginTop: 0}}>+ Add New Tab Slot</button>
+        <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Tab", tags: "General" }])} className="pbtn" style={{background: "transparent", color: "#5E5CE6", border: "1.5px solid #5E5CE6", boxShadow: "none"}}>+ Add New Tab Slot</button>
       )}
-      {hasTabChanges && <button onClick={saveTabs} className="pbtn" style={{background: "#232528", marginTop: 12}}>💾 Save Layout</button>}
+      {hasTabChanges && <button onClick={saveTabs} className="pbtn" style={{marginTop: 14}}>💾 Save Layout</button>}
     </div>
 
     <div className="card" style={{marginTop: 20}}>
-      <h3 style={{marginBottom:10, fontSize:20}}>System Defaults & Persona</h3>
+      <h3 style={{marginBottom:15, fontSize:20}}>System Defaults & Persona</h3>
       <span className="lbl">Assistant Persona Rules</span>
       <textarea rows={3} value={draftCtx} onChange={e=>setDraftCtx(e.target.value)} className="inp" />
-      
       <span className="lbl">Journal Tags</span>
       <input value={draftAct} onChange={e=>setDraftAct(e.target.value)} className="inp"/>
-      
       <span className="lbl">Ledger: Expense Tags</span>
       <input value={draftExp} onChange={e=>setDraftExp(e.target.value)} className="inp"/>
-      
       <span className="lbl">Ledger: Investment Tags</span>
       <input value={draftInv} onChange={e=>setDraftInv(e.target.value)} className="inp"/>
-      
       <span className="lbl">Training Tags</span>
       <input value={draftGym} onChange={e=>setDraftGym(e.target.value)} className="inp"/>
-      
       <span className="lbl">Study Tags</span>
       <input value={draftSkill} onChange={e=>setDraftSkill(e.target.value)} className="inp"/>
-
-      <button onClick={resetToDefaults} className="pbtn" style={{background: "transparent", color: "#5A544A", border: "1px dashed #C4BEAD", marginTop: 8}}>↺ Restore Default Tabs</button>
-      
-      {hasConfigChanges && <button onClick={saveSystemDefaults} className="pbtn" style={{background: "#5A544A", marginTop: 12}}>💾 Save Configurations</button>}
+      <button onClick={resetToDefaults} className="pbtn" style={{background: "transparent", color: "#8E8E93", border: "1px dashed #C7C7CC", boxShadow: "none"}}>↺ Restore Defaults</button>
+      {hasConfigChanges && <button onClick={saveSystemDefaults} className="pbtn" style={{marginTop: 14}}>💾 Save Configurations</button>}
     </div>
   </div>;
 }
@@ -437,18 +438,16 @@ const DEFAULT_TABS = [
 ];
 
 function App(){
- const [tabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
+  const [tabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
   const tabs = JSON.parse(tabsStr);
   const [tab, setTab] = useState("activity");
 
-  // NEW VERSION KEY (V7) TO TRIGGER RE-WALKTHROUGH
   const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v7_final", "false");
   const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
   const [welcomeStep, setWelcomeStep] = useState(1);
   const [tempIdentity, setTempIdentity] = useState("");
 
   const finishWelcome = () => {
-    // Only save identity if it wasn't skipped
     if (tempIdentity.trim()) {
       localStorage.setItem("sys_ctx", JSON.stringify(tempIdentity));
     }
@@ -467,12 +466,15 @@ function App(){
             <div>
               <div style={{fontSize: 50, marginBottom: 10}}>✍️</div>
               <h2 style={{marginBottom: 12, fontSize:28}}>The Chronicles</h2>
-              <p style={{fontSize: 15, color: "#8E8E93", marginBottom: 20, lineHeight: "1.5", textAlign:"center"}}>
+              <p style={{fontSize: 15, color: "#8E8E93", marginBottom: 20, lineHeight: "1.5"}}>
                 To provide strategic coaching, tell the AI who you are and what you aim to achieve.
               </p>
               <textarea className="inp" rows={4} placeholder="I am Krishna, a Senior Linguist..." value={tempIdentity} onChange={(e) => setTempIdentity(e.target.value)} />
               <button onClick={() => {if(tempIdentity.trim()) setWelcomeStep(2); else alert("Please introduce yourself first.");}} className="pbtn">Continue</button>
-              <button onClick={() => setWelcomeStep(2)} style={{background: "none", border: "none", color: "#8E8E93", fontSize: 13, marginTop: 15, cursor: "pointer", textDecoration: "underline"}}>Skip for now</button>
+              <div style={{marginTop: 15}}>
+                <button onClick={() => setWelcomeStep(2)} style={{background: "none", border: "none", color: "#5E5CE6", fontSize: 13, cursor: "pointer", textDecoration: "underline"}}>Skip for now</button>
+                <p style={{fontSize: 10, color: "#8E8E93", marginTop: 6, fontStyle: "italic"}}>💡 You can always add this later in Config > 'Assistant Persona Rules' box.</p>
+              </div>
             </div>
           )}
           {welcomeStep === 2 && (
@@ -481,7 +483,7 @@ function App(){
               <h2 style={{marginBottom: 12, fontSize:24}}>Data Safety</h2>
               <div style={{textAlign:"left", fontSize:14, marginBottom:24, background:"#F2F2F7", padding:18, borderRadius:20}}>
                 <p style={{marginBottom: 10}}><b>🔒 100% Private:</b> Data is stored only in your local browser storage.</p>
-                <p><b>⚠️ Warning:</b> Export your archive frequently from the Config tab to prevent data loss.</p>
+                <p><b>⚠️ Safety:</b> Local data can be lost. Export your archive frequently in <b>Config</b> to stay safe.</p>
               </div>
               <button onClick={() => setWelcomeStep(3)} className="pbtn">I Understand</button>
             </div>
@@ -491,7 +493,7 @@ function App(){
               <div style={{fontSize: 50, marginBottom: 10}}>🚀</div>
               <h2 style={{marginBottom: 12, fontSize:24}}>Final Step</h2>
               <p style={{fontSize:15, textAlign:"center", marginBottom:20, color: "#8E8E93"}}>
-                Customize up to 6 tabs in <b>Config</b> to match your lifestyle.
+                <b>Welcome to My Chronicles.</b><br/>Customize up to 6 tabs in <b>Config</b> to match your lifestyle.
               </p>
               <button onClick={finishWelcome} className="pbtn">Start Journey</button>
             </div>
@@ -500,18 +502,21 @@ function App(){
       </div>
     )}
 
-    {/* HEADER SECTION */}
+    {/* APP NAME & GREETING */}
     <div style={{padding: "40px 0 20px", textAlign:"left"}}>
-      <h1 style={{fontSize: 34, marginBottom: 4}}>{greet},</h1>
+      <h4 style={{fontSize: 12, color: "#5E5CE6", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8}}>My Chronicles</h4>
+      <h1 style={{fontSize: 34, marginBottom: 4}}>{greet}, Human.</h1>
       <p style={{fontSize: 16, color: "#8E8E93", fontWeight: 500}}>
         {new Date().toLocaleDateString("en-US", {weekday:"long", month:"long", day:"numeric"})}
       </p>
     </div>
 
-    {/* CONTENT AREA WITH ANIMATIONS */}
     <div className="tab-content" key={tab}>
       {tabs.map(t => (
         <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
+          <div style={{marginBottom: 10, display: "flex", alignItems: "center", gap: 8}}>
+             <span style={{fontSize: 12, color: "#8E8E93", fontWeight: 700}}>{greet}, Human.</span>
+          </div>
           {t.id === "activity" ? <Activity/> : 
            t.id === "finance" ? <Finance/> :
            t.id === "gym" ? <Gym/> : 
@@ -522,12 +527,11 @@ function App(){
       ))}
     </div>
 
-    {/* FLOATING NAVIGATION */}
     <div className="nav">
       {tabs.map(t => (
         <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
-          <span style={{fontSize: 22, color: tab === t.id ? "#5E5CE6" : "#C7C7CC", transition: "0.3s"}}>{t.icon}</span>
-          <span style={{fontSize: 10, fontWeight: 700, color: tab === t.id ? "#5E5CE6" : "#C7C7CC", transition: "0.3s"}}>{t.label}</span>
+          <span style={{fontSize: 22, color: tab === t.id ? "#5E5CE6" : "#C7C7CC"}}>{t.icon}</span>
+          <span style={{fontSize: 10, fontWeight: 700, color: tab === t.id ? "#5E5CE6" : "#C7C7CC"}}>{t.label}</span>
         </button>
       ))}
     </div>
