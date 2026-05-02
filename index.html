@@ -275,31 +275,156 @@ function Skills(){
 }
 
 function Settings(){
-  const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "");
+  const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Keep responses direct, warm, and max 250 words.");
+  const [sysAct, setSysAct] = useLocalStorage("sys_act", "Deep work, Meetings, Commute, Break, Admin");
+  const [sysExp, setSysExp] = useLocalStorage("sys_exp", "Food, Transport, Bills, Family, Fun, Other");
+  const [sysInv, setSysInv] = useLocalStorage("sys_inv", "Skills, Health, Savings, Other");
+  const [sysGym, setSysGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
+  const [sysSkill, setSysSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
+  
+  const [draftCtx, setDraftCtx] = useState(sysCtx);
+  const [draftAct, setDraftAct] = useState(sysAct);
+  const [draftExp, setDraftExp] = useState(sysExp);
+  const [draftInv, setDraftInv] = useState(sysInv);
+  const [draftGym, setDraftGym] = useState(sysGym);
+  const [draftSkill, setDraftSkill] = useState(sysSkill);
+
+  const saveSystemDefaults = () => {
+    setSysCtx(draftCtx);
+    setSysAct(draftAct);
+    setSysExp(draftExp);
+    setSysInv(draftInv);
+    setSysGym(draftGym);
+    setSysSkill(draftSkill);
+    alert("✅ Configurations Saved!");
+  };
+
+  const [customCatsStr, setCustomCatsStr] = useLocalStorage("sys_custom_cats", "[]");
+  const [draftCats, setDraftCats] = useState(() => {
+    try { 
+       const parsed = JSON.parse(customCatsStr); 
+       return Array.isArray(parsed) ? parsed : [];
+    } catch(e) { return []; }
+  });
+
+  const saveCategories = () => {
+    setCustomCatsStr(JSON.stringify(draftCats));
+    alert("✅ Custom Categories Saved!");
+  };
+
   const [tabsStr, setTabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
-  const [draftTabs, setDraftTabs] = useState(() => JSON.parse(tabsStr));
-  const save = () => { setTabsStr(JSON.stringify(draftTabs)); alert("Saved!"); };
+  const [draftTabs, setDraftTabs] = useState(() => {
+    try { 
+       const parsed = JSON.parse(tabsStr); 
+       return Array.isArray(parsed) ? parsed : DEFAULT_TABS;
+    } catch(e) { return DEFAULT_TABS; }
+  });
+
+  const saveTabs = () => {
+    const finalTabs = draftTabs.filter(t => t.id !== "settings");
+    finalTabs.push({ id: "settings", icon: "⚙", label: "Config" });
+    setTabsStr(JSON.stringify(finalTabs));
+    alert("✅ Navigation Updated! Changes are live.");
+  };
+
+  const exportData = () => {
+    const allData = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      allData[key] = localStorage.getItem(key);
+    }
+    const blob = new Blob([JSON.stringify(allData)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Chronicles_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+  };
+
+  const importData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        Object.keys(data).forEach(key => { localStorage.setItem(key, data[key]); });
+        alert("✅ Archives Restored Successfully! Refreshing now...");
+        window.location.reload();
+      } catch (err) { alert("❌ Invalid archive file."); }
+    };
+    reader.readAsText(file);
+  };
   
   return <div>
-    <div className="card" style={{border: "1.5px solid #7A2A3B"}}>
-      <span className="lbl">Identity / Assistant Persona</span>
-      <textarea rows={6} value={sysCtx} onChange={e=>setSysCtx(e.target.value)} className="inp" placeholder="Who are you? What are your goals?"/>
+    {/* ARCHIVE PROTECTION BLOCK - RESTORED */}
+    <div className="card" style={{border:"1px solid #C4BEAD", background: "#EBE7DD", textAlign: "center"}}>
+      <h3 style={{marginBottom:8, color: "#4A443A", fontSize: "20px"}}>Archive Protection</h3>
+      <p style={{fontSize:13, color:"#5A544A", marginBottom:14, lineHeight: "1.5", fontStyle:"italic"}}>
+        Export frequently to protect your history before clearing browser cache.
+      </p>
+      <button onClick={exportData} className="pbtn" style={{background:"#232528", margin: "5px 0"}}>📥 Export Archive File</button>
+      <div style={{marginTop: 18, borderTop: "1px dashed #C4BEAD", paddingTop: 14}}>
+        <span className="lbl" style={{color: "#5A544A", marginBottom: 8, display: "block"}}>Restore from Archive</span>
+        <input type="file" accept=".json" onChange={importData} style={{fontSize: "12px", color: "#000", width: "100%"}}/>
+      </div>
     </div>
-    <div className="card">
-      <h3 style={{marginBottom:10}}>Navigation & Tags</h3>
+
+    {/* CUSTOM CATEGORIES / TABS MANAGER - RESTORED & REFINED */}
+    <div className="card" style={{borderTop:"3px solid #232528"}}>
+      <h3 style={{color: "#232528", fontSize:20, marginBottom: 10}}>Custom Navigation Slots</h3>
+      <p style={{fontSize:12,color:"#888375",marginBottom:14,fontStyle:"italic"}}>Rename tools or add custom journals with specific tags.</p>
+      
       {draftTabs.map((t, idx) => (
-        <div key={t.id} className="card" style={{padding:12, marginBottom:10, background:"#EBE7DD"}}>
-          <div style={{display:"flex", gap:8, marginBottom:8}}>
-            <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 50, textAlign: "center", marginBottom:0}} />
-            <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom:0}} disabled={t.id === "settings"} />
-            {t.id !== "settings" && <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color:"#A8A291", border:"none", background:"none", fontSize:20}}>×</button>}
+        <div key={t.id} style={{marginBottom: 16, padding: "10px", background: "#F8F7F2", border: "1px solid #C4BEAD", borderRadius: 4}}>
+          <div style={{display: "flex", gap: 8, marginBottom: 8}}>
+            <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 50, textAlign: "center", marginBottom: 0}} />
+            <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0}} disabled={t.id === "settings"} />
+            {t.id !== "settings" && (
+              <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color: "#A8A291", background: "none", border: "none", cursor: "pointer", fontSize:18}}>×</button>
+            )}
           </div>
-          <span className="lbl">Section Tags</span>
-          <input value={t.tags || ""} onChange={e => { const n = [...draftTabs]; n[idx].tags = e.target.value; setDraftTabs(n); }} className="inp" placeholder="Tag 1, Tag 2" style={{marginBottom:0}} />
+          {/* REFINEMENT: Added Tags input for the Custom Tab */}
+          <span className="lbl" style={{fontSize: 9}}>Tags for this section (e.g. Prayer, Meditation)</span>
+          <input value={t.tags || ""} onChange={e => { const n = [...draftTabs]; n[idx].tags = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0, padding: 8, fontSize: 12}} placeholder="Comma separated tags..." />
         </div>
       ))}
-      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section", tags: "General" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528"}}>+ Add Tab</button>
-      <button onClick={save} className="pbtn" style={{background: "#232528", marginTop:12}}>💾 Save Layout</button>
+      
+      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section", tags: "General" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528", marginTop: 0}}>+ Add New Tab Slot</button>
+      <button onClick={saveTabs} className="pbtn" style={{background: "#232528", marginTop: 12}}>💾 Save Layout</button>
+    </div>
+
+    {/* CUSTOM CLASSIFICATIONS BLOCK - RESTORED */}
+    <div className="card" style={{borderTop:"3px solid #7A2A3B"}}>
+      <h3 style={{marginBottom:10, color: "#7A2A3B", fontSize:20}}>Custom Classifications</h3>
+      {draftCats.map(c => (
+        <div key={c.id} style={{marginBottom: 16, padding: "14px", border: "1px dashed #C4BEAD", borderRadius: 4, background: "#EBE7DD"}}>
+          <div style={{display: "flex", justifyContent: "space-between", marginBottom: 12}}>
+            <input value={c.name} onChange={e => { const n = [...draftCats]; n.find(x=>x.id===c.id).name = e.target.value; setDraftCats(n); }} style={{fontWeight: "700", border: "none", borderBottom: "2px solid #7A2A3B", background: "transparent", width: "70%", fontSize: 18, color: "#7A2A3B", outline: "none", fontFamily:"'Playfair Display',serif"}} />
+            <button onClick={() => setDraftCats(draftCats.filter(x=>x.id!==c.id))} style={{color: "#A8A291", border: "none", background: "none", cursor: "pointer", fontSize: 18}}>×</button>
+          </div>
+          <span className="lbl">Items (comma separated)</span>
+          <input value={c.tags} onChange={e => { const n = [...draftCats]; n.find(x=>x.id===c.id).tags = e.target.value; setDraftCats(n); }} className="inp" style={{marginBottom:0}}/>
+        </div>
+      ))}
+      <button onClick={() => setDraftCats([...draftCats, { id: Date.now(), name: "New Class", tags: "Item 1, Item 2" }])} className="pbtn" style={{background: "transparent", color: "#7A2A3B", border: "1px solid #7A2A3B", marginTop: 8}}>+ Add Classification</button>
+      <button onClick={saveCategories} className="pbtn" style={{background: "#7A2A3B", marginTop: 12}}>💾 Save Classifications</button>
+    </div>
+
+    {/* SYSTEM DEFAULTS & PERSONA BLOCK - RESTORED */}
+    <div className="card" style={{marginTop: 20}}>
+      <h3 style={{marginBottom:10, fontSize:20}}>System Defaults & Persona</h3>
+      <span className="lbl">Assistant Persona Rules</span>
+      <textarea rows={3} value={draftCtx} onChange={e=>setDraftCtx(e.target.value)} className="inp" />
+      <span className="lbl">Journal Defaults</span>
+      <input value={draftAct} onChange={e=>setDraftAct(e.target.value)} className="inp"/>
+      <span className="lbl">Ledger: Expenses</span>
+      <input value={draftExp} onChange={e=>setDraftExp(e.target.value)} className="inp"/>
+      <span className="lbl">Training: Focus Muscles</span>
+      <input value={draftGym} onChange={e=>setDraftGym(e.target.value)} className="inp"/>
+      <span className="lbl">Study: Subjects</span>
+      <input value={draftSkill} onChange={e=>setDraftSkill(e.target.value)} className="inp"/>
+      <button onClick={saveSystemDefaults} className="pbtn" style={{background: "#5A544A", marginTop: 8}}>💾 Save Configurations</button>
     </div>
   </div>;
 }
