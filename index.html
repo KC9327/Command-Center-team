@@ -389,9 +389,12 @@ function App(){
     <div style={{padding: "16px"}}>
       {tabs.map(t => (
         <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
-          {t.id === "activity" ? <Activity/> : t.id === "finance" ? <Finance/> :
-           t.id === "gym" ? <Gym/> : t.id === "skills" ? <Skills/> :
-           t.id === "settings" ? <Settings/> : <GenericLogger sectionId={t.id} title={t.label} icon={t.icon} tagsStr={t.tags} />}
+          {t.id === "activity" ? <Activity/> : 
+           t.id === "finance" ? <Finance/> :
+           t.id === "gym" ? <Gym/> : 
+           t.id === "skills" ? <Skills/> :
+           t.id === "settings" ? <Settings/> : 
+           <GenericLogger sectionId={t.id} title={t.label} icon={t.icon} tagsStr={t.tags} />}
         </div>
       ))}
     </div>
