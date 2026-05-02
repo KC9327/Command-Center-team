@@ -170,6 +170,7 @@ function GenericLogger({ sectionId, title, icon, tagsStr }) {
     return String(n.getHours()).padStart(2, "0") + ":" + String(n.getMinutes()).padStart(2, "0");
   });
 
+  // Syncs tags directly from the Config string provided
   const categories = (tagsStr || "").split(",").map((t, i) => ({ n: t.trim(), ...PALETTE[i % PALETTE.length] })).filter(x => x.n);
 
   function add() {
@@ -190,18 +191,19 @@ function GenericLogger({ sectionId, title, icon, tagsStr }) {
         </div>
         <div style={{ background: "#232528", borderRadius: 8, padding: 16, color: "#F8F7F2", textAlign: "center", borderBottom: "4px solid #7A2A3B" }}>
           <div style={{ fontSize: 24, fontFamily: "'Playfair Display',serif", marginTop: 2 }}>{Math.floor(total / 60)}h {total % 60}m</div>
-          <div style={{ fontSize: 11, color: "#C4BEAD", marginTop: 4, letterSpacing: 1 }}>TOTAL TIME</div>
+          <div style={{ fontSize: 11, color: "#C4BEAD", marginTop: 4, letterSpacing: 1 }}>TRACKED</div>
         </div>
       </div>
       <div className="card">
         <h3 style={{marginBottom: 10}}>{icon} {title}</h3>
+        <span className="lbl">Start Time</span>
         <input type="time" value={time} onChange={e => setTime(e.target.value)} className="inp" style={{ width: "auto" }} />
         <textarea rows={2} value={text} onChange={e => setText(e.target.value)} placeholder={`Log ${title}...`} className="inp" />
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 12 }}>
           {categories.map(c => <Tag key={c.n} label={c.n} sel={cat === c.n} onClick={() => setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br} />)}
         </div>
         <Dur h={h} m={m} sh={setH} sm={setM} />
-        <button onClick={add} className="pbtn" style={{ background: "#232528" }}>+ Log to {title}</button>
+        <button onClick={add} className="pbtn" style={{ background: "#232528" }}>+ Save to {title}</button>
       </div>
       {[...entries].reverse().map(e => {
         const c = categories.find(x => x.n === e.cat);
@@ -214,64 +216,27 @@ function GenericLogger({ sectionId, title, icon, tagsStr }) {
           </div>
         );
       })}
-      {entries.length > 0 && <AIBtn label={`Review ${title}`} prompt={log} />}
+      {entries.length > 0 && <AIBtn label={`${title} Analysis`} prompt={log} />}
     </div>
   );
 }
 
+// Redirecting all specific tabs to the unified Master Engine
 function Activity(){
-  const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Commute, Break, Admin");
+  const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Admin");
   return <GenericLogger sectionId="activity" title="Journal" icon="◎" tagsStr={actStr} />;
 }
-
 function Finance(){
-  const [expenses,setExpenses]=useLocalStorage("fin_exp",[]); const [invs,setInvs]=useLocalStorage("fin_inv",[]);
   const [expStr]=useLocalStorage("sys_exp","Food, Transport, Bills, Family, Fun, Other");
-  const [invStr]=useLocalStorage("sys_inv","Skills, Health, Savings, Other");
-  const [tab,setTab]=useState("exp");
-  const [ed,setEd]=useState("");const [ea,setEa]=useState("");const [ec,setEc]=useState(null);
-  const te=expenses.reduce((s,e)=>s+parseFloat(e.a||0),0); const ti=invs.reduce((s,e)=>s+parseFloat(e.a||0),0);
-  const log="Expenses:\n"+expenses.map(e=>`- ${e.c}: ${e.d} ₹${e.a}`).join("\n") + "\nInvestments:\n"+invs.map(e=>`- ${e.c}: ${e.d} ₹${e.a}`).join("\n");
-  function addE(){setExpenses([...expenses,{id:Date.now(),d:ed,a:ea,c:ec}]);setEd("");setEa("");setEc(null);}
-  function addI(){setInvs([...invs,{id:Date.now(),d:id,a:ia,c:ic}]);setId("");setIa("");setIc(null);}
-  return <div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
-      <div className="card" style={{textAlign:"center", background:"#F0EBEB", border:"1px solid #B06373"}}><div style={{fontSize:24}}>₹{te}</div><div className="lbl">SPENT</div></div>
-      <div className="card" style={{textAlign:"center", background:"#EBECE7", border:"1px solid #69785D"}}><div style={{fontSize:24}}>₹{ti}</div><div className="lbl">INVESTED</div></div>
-    </div>
-    <div style={{display:"flex",gap:8,marginBottom:14}}>
-      <button onClick={()=>setTab("exp")} className="pbtn" style={{flex:1, background:tab==="exp"?"#232528":"#C4BEAD", marginTop:0}}>Expenses</button>
-      <button onClick={()=>setTab("inv")} className="pbtn" style={{flex:1, background:tab==="inv"?"#232528":"#C4BEAD", marginTop:0}}>Investments</button>
-    </div>
-    <div className="card">
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{tab==="exp"?expStr.split(",").map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>):invStr.split(",").map(c=><Tag key={c} label={c} sel={ic===c} onClick={()=>setIc(c)} bg="#EBECE7" tx="#3A4533" br="#69785D"/>)}</div>
-      <input value={tab==="exp"?ed:id} onChange={e=>tab==="exp"?setEd(e.target.value):setId(e.target.value)} placeholder="Description" className="inp"/>
-      <input type="number" value={tab==="exp"?ea:ia} onChange={e=>tab==="exp"?setEa(e.target.value):setIa(e.target.value)} placeholder="Amount" className="inp"/>
-      <button onClick={tab==="exp"?addE:addI} className="pbtn" style={{background:tab==="exp"?"#7A2A3B":"#3A4533"}}>+ Log</button>
-    </div>
-    {(expenses.length>0||invs.length>0) && <AIBtn label="Finance Audit" prompt={log} />}
-  </div>;
+  return <GenericLogger sectionId="finance" title="Ledger" icon="₹" tagsStr={expStr} />;
 }
-
 function Gym(){
   const [gymStr]=useLocalStorage("sys_gym","Push, Pull, Legs, Core, Cardio, Rest");
-  const [exs,setExs]=useLocalStorage("gym_exs",[]); const [en,setEn]=useState("");
-  const log="Workout Session:\n"+exs.map(e=>`- ${e.n}`).join("\n");
-  function add(){setExs([...exs,{id:Date.now(),n:en}]);setEn("");}
-  return <div>
-    <div className="card"><input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise" className="inp"/><button onClick={add} className="pbtn" style={{background:"#3A4533"}}>+ Add</button></div>
-    {exs.length>0 && <AIBtn label="Training Review" prompt={log}/>}
-  </div>;
+  return <GenericLogger sectionId="gym" title="Training" icon="◈" tagsStr={gymStr} />;
 }
-
 function Skills(){
-  const [topic,setTopic]=useState(""); const [learned,setLearned]=useState("");
-  const log=`Topic: ${topic}\nTakeaways: ${learned}`;
-  return <div className="card">
-    <input value={topic} onChange={e=>setTopic(e.target.value)} placeholder="Subject" className="inp"/>
-    <textarea value={learned} onChange={e=>setLearned(e.target.value)} placeholder="Learnings..." className="inp"/>
-    <AIBtn label="Skill Synthesis" prompt={log}/>
-  </div>;
+  const [skillStr]=useLocalStorage("sys_skill","Design, Coding, Marketing, Reading");
+  return <GenericLogger sectionId="skills" title="Study" icon="◑" tagsStr={skillStr} />;
 }
 
 function Settings(){
