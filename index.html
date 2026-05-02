@@ -301,27 +301,27 @@ function Settings(){
   const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Keep responses direct, warm, and max 250 words.");
   const [sysAct, setSysAct] = useLocalStorage("sys_act", "Deep work, Meetings, Commute, Break, Admin");
   const [sysExp, setSysExp] = useLocalStorage("sys_exp", "Food, Transport, Bills, Family, Fun, Other");
+  const [sysInv, setSysInv] = useLocalStorage("sys_inv", "Skills, Health, Savings, Other");
   const [sysGym, setSysGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
   const [sysSkill, setSysSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
   
   const [draftCtx, setDraftCtx] = useState(sysCtx);
   const [draftAct, setDraftAct] = useState(sysAct);
   const [draftExp, setDraftExp] = useState(sysExp);
+  const [draftInv, setDraftInv] = useState(sysInv);
   const [draftGym, setDraftGym] = useState(sysGym);
   const [draftSkill, setDraftSkill] = useState(sysSkill);
 
-  // TRACK CHANGES FOR CONDITIONAL SAVE
-  const hasConfigChanges = draftCtx !== sysCtx || draftAct !== sysAct || draftExp !== sysExp || draftGym !== sysGym || draftSkill !== sysSkill;
+  // CHANGE TRACKING FOR ALL CONFIGS
+  const hasConfigChanges = draftCtx !== sysCtx || draftAct !== sysAct || draftExp !== sysExp || draftInv !== sysInv || draftGym !== sysGym || draftSkill !== sysSkill;
 
   const saveSystemDefaults = () => {
-    setSysCtx(draftCtx); setSysAct(draftAct); setSysExp(draftExp); setSysGym(draftGym); setSysSkill(draftSkill);
+    setSysCtx(draftCtx); setSysAct(draftAct); setSysExp(draftExp); setSysInv(draftInv); setSysGym(draftGym); setSysSkill(draftSkill);
     alert("✅ Configurations Saved!");
   };
 
   const [tabsStr, setTabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
   const [draftTabs, setDraftTabs] = useState(() => JSON.parse(tabsStr));
-  
-  // TRACK TAB CHANGES FOR CONDITIONAL SAVE
   const hasTabChanges = JSON.stringify(draftTabs) !== tabsStr;
 
   const saveTabs = () => {
@@ -332,10 +332,8 @@ function Settings(){
   };
 
   const resetToDefaults = () => {
-    if(window.confirm("Restore original tabs? This will reset your Activity Sections.")){
-      setDraftTabs(DEFAULT_TABS);
-      setTabsStr(JSON.stringify(DEFAULT_TABS));
-      window.location.reload();
+    if(window.confirm("Restore original tabs?")){
+      setDraftTabs(DEFAULT_TABS); setTabsStr(JSON.stringify(DEFAULT_TABS)); window.location.reload();
     }
   };
 
@@ -359,13 +357,12 @@ function Settings(){
         const data = JSON.parse(event.target.result);
         Object.keys(data).forEach(key => { localStorage.setItem(key, data[key]); });
         alert("✅ Archives Restored!"); window.location.reload();
-      } catch (err) { alert("❌ Invalid file."); }
+      } catch (err) { alert("❌ Invalid archive."); }
     };
     reader.readAsText(file);
   };
   
   return <div>
-    {/* ARCHIVE PROTECTION */}
     <div className="card" style={{border:"1px solid #C4BEAD", background: "#EBE7DD", textAlign: "center"}}>
       <h3 style={{marginBottom:8, color: "#4A443A", fontSize: "20px"}}>Archive Protection</h3>
       <button onClick={exportData} className="pbtn" style={{background:"#232528", margin: "5px 0"}}>📥 Export Archive</button>
@@ -374,35 +371,28 @@ function Settings(){
       </div>
     </div>
 
-    {/* CUSTOM NAVIGATION - HARD LIMIT 6 */}
     <div className="card" style={{borderTop:"3px solid #232528"}}>
       <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10}}>
-        <h3 style={{color: "#232528", fontSize:20}}>Activity Sections</h3>
+        <h3 style={{color: "#232528", fontSize:20}}>Navigation Slots</h3>
         <span style={{fontSize:10, color: draftTabs.length >= 6 ? "#7A2A3B" : "#888375", fontWeight:700}}>{draftTabs.length}/6 SLOTS</span>
       </div>
-      
       {draftTabs.map((t, idx) => (
         <div key={t.id} style={{marginBottom: 16, padding: "10px", background: "#F8F7F2", border: "1px solid #C4BEAD", borderRadius: 4}}>
           <div style={{display: "flex", gap: 8, marginBottom: 8}}>
             <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 50, textAlign: "center", marginBottom: 0}} />
             <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0}} disabled={t.id === "settings"} />
-            {t.id !== "settings" && (
-              <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color: "#A8A291", border: "none", background: "none", fontSize:18}}>×</button>
-            )}
+            {t.id !== "settings" && <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color: "#A8A291", border: "none", background: "none", fontSize:18}}>×</button>}
           </div>
-          <span className="lbl" style={{fontSize: 9}}>Section Tags (Comma separated)</span>
+          <span className="lbl" style={{fontSize: 9}}>Section Tags (For Custom Tabs)</span>
           <input value={t.tags || ""} onChange={e => { const n = [...draftTabs]; n[idx].tags = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom: 0, padding: 8, fontSize: 12}} placeholder="e.g. Prayer, Meditation..." />
         </div>
       ))}
-      
       {draftTabs.length < 6 && (
         <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Tab", tags: "General" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528", marginTop: 0}}>+ Add New Tab Slot</button>
       )}
-      
       {hasTabChanges && <button onClick={saveTabs} className="pbtn" style={{background: "#232528", marginTop: 12}}>💾 Save Layout</button>}
     </div>
 
-    {/* SYSTEM DEFAULTS & PERSONA */}
     <div className="card" style={{marginTop: 20}}>
       <h3 style={{marginBottom:10, fontSize:20}}>System Defaults & Persona</h3>
       <span className="lbl">Assistant Persona Rules</span>
@@ -410,6 +400,12 @@ function Settings(){
       
       <span className="lbl">Journal Tags</span>
       <input value={draftAct} onChange={e=>setDraftAct(e.target.value)} className="inp"/>
+      
+      <span className="lbl">Ledger: Expense Tags</span>
+      <input value={draftExp} onChange={e=>setDraftExp(e.target.value)} className="inp"/>
+      
+      <span className="lbl">Ledger: Investment Tags</span>
+      <input value={draftInv} onChange={e=>setDraftInv(e.target.value)} className="inp"/>
       
       <span className="lbl">Training Tags</span>
       <input value={draftGym} onChange={e=>setDraftGym(e.target.value)} className="inp"/>
