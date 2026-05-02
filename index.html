@@ -359,27 +359,55 @@ const TABS=[
 ];
 
 function App(){
-  const [tab,setTab]=useState("activity");
-  const hr=new Date().getHours();
-  const greet=hr<12?"Good morning":hr<17?"Good afternoon":"Good evening";
-  const today=new Date().toLocaleDateString("en-US",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-  return <div style={{maxWidth:480,margin:"0 auto",paddingBottom:90}}>
-    <div style={{background:"#1a1a2e",padding:"20px 16px 16px",borderRadius:"0 0 20px 20px",marginBottom:16}}>
-      <p style={{fontSize:11,color:"#8888aa",letterSpacing:2,marginBottom:4}}>DAILY COMMAND CENTER v6</p>
-      <p style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:2}}>{greet}</p>
-      <p style={{fontSize:13,color:"#8888aa"}}>{today}</p>
+  const [tab, setTab] = useState("activity");
+  const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6", false);
+  const [showWelcome, setShowWelcome] = useState(!hasVisited);
+
+  const hr = new Date().getHours();
+  const greet = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
+  const today = new Date().toLocaleDateString("en-US", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+
+  const closeWelcome = () => {
+    setHasVisited(true);
+    setShowWelcome(false);
+  };
+
+  return <div style={{maxWidth: 480, margin: "0 auto", paddingBottom: 90}}>
+    {/* FIRST-TIME USER WELCOME POPUP */}
+    {showWelcome && (
+      <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
+        <div className="card" style={{textAlign: "center", border: "2px solid #3C3489"}}>
+          <h2 style={{color: "#3C3489", marginBottom: 15}}>Welcome, Team! 🚀</h2>
+          <p style={{fontSize: 14, color: "#444", marginBottom: 10, lineHeight: "1.5"}}>
+            To get started, you need to set up your personal <b>API Key</b> and <b>Categories</b>.
+          </p>
+          <p style={{fontSize: 13, color: "#666", marginBottom: 20}}>
+            Click the <b>⚙ Settings</b> icon at the bottom right to begin. 
+            Remember, your data stays 100% private on this device.
+          </p>
+          <button onClick={closeWelcome} className="pbtn" style={{background: "#3C3489"}}>Got it, let's go!</button>
+        </div>
+      </div>
+    )}
+
+    <div style={{background: "#1a1a2e", padding: "20px 16px 16px", borderRadius: "0 0 20px 20px", marginBottom: 16}}>
+      <p style={{fontSize: 11, color: "#8888aa", letterSpacing: 2, marginBottom: 4}}>DAILY COMMAND CENTER v6</p>
+      <p style={{fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 2}}>{greet}</p>
+      <p style={{fontSize: 13, color: "#8888aa"}}>{today}</p>
     </div>
-    <div style={{padding:"0 12px"}}>
-      <div style={{display:tab==="activity"?"block":"none"}}><Activity/></div>
-      <div style={{display:tab==="finance"?"block":"none"}}><Finance/></div>
-      <div style={{display:tab==="gym"?"block":"none"}}><Gym/></div>
-      <div style={{display:tab==="skills"?"block":"none"}}><Skills/></div>
-      <div style={{display:tab==="settings"?"block":"none"}}><Settings/></div>
+
+    <div style={{padding: "0 12px"}}>
+      <div style={{display: tab === "activity" ? "block" : "none"}}><Activity/></div>
+      <div style={{display: tab === "finance" ? "block" : "none"}}><Finance/></div>
+      <div style={{display: tab === "gym" ? "block" : "none"}}><Gym/></div>
+      <div style={{display: tab === "skills" ? "block" : "none"}}><Skills/></div>
+      <div style={{display: tab === "settings" ? "block" : "none"}}><Settings/></div>
     </div>
+
     <div className="nav">
-      {TABS.map(t=><button key={t.id} className="nb" onClick={()=>setTab(t.id)}>
-        <span style={{fontSize:18,color:tab===t.id?"#1a1a2e":"#ccc"}}>{t.icon}</span>
-        <span style={{fontSize:10,fontFamily:"Georgia,serif",color:tab===t.id?"#1a1a2e":"#bbb",fontWeight:tab===t.id?600:400,letterSpacing:0.5}}>{t.label}</span>
+      {TABS.map(t => <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
+        <span style={{fontSize: 18, color: tab === t.id ? "#1a1a2e" : "#ccc"}}>{t.icon}</span>
+        <span style={{fontSize: 10, fontFamily: "Georgia,serif", color: tab === t.id ? "#1a1a2e" : "#bbb", fontWeight: tab === t.id ? 600 : 400, letterSpacing: 0.5}}>{t.label}</span>
       </button>)}
     </div>
   </div>;
