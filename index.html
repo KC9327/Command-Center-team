@@ -25,7 +25,7 @@ h1, h2, h3, h4 {font-family:'Playfair Display',serif; color:#7A2A3B; letter-spac
 .dbtn{float:right;background:none;border:none;color:#A8A291;font-size:18px;cursor:pointer}
 .nav{position:fixed;bottom:0;left:0;right:0;background:#F8F7F2;border-top:1px solid #D9D4C5;display:flex;padding:10px 4px 16px;overflow-x:auto;box-shadow:0 -2px 10px rgba(0,0,0,0.03);}
 .nb{min-width:60px;flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;padding:6px 2px}
-.ai{background:#232528;border-radius:6px;padding:18px;color:#F8F7F2;font-size:14px;line-height:1.8;white-space:pre-wrap;margin-top:12px;border-left:4px solid #7A2A3B;}
+.ai-bridge{background:#EBE7DD;border-radius:6px;padding:16px;margin-top:20px;border:1px dashed #C4BEAD;}
 </style>
 </head>
 <body>
@@ -89,44 +89,54 @@ function Dur({h,m,sh,sm}){
   </div>;
 }
 
-function AIBtn({prompt,label}){
-  const [load,setLoad]=useState(false);
-  const [res,setRes]=useState("");
-  const [apiKey, setApiKey] = useLocalStorage("gemini_api_key", "");
-  const [ctx] = useLocalStorage("sys_ctx", "You are a helpful personal assistant. Be direct and warm.");
+function AIBtn({prompt, label}){
+  const [status, setStatus] = useState("idle");
+  const [aiModel, setAiModel] = useLocalStorage("pref_ai_model", "chatgpt");
+  const [identity] = useLocalStorage("sys_ctx", "");
 
-  async function run(attempt = 1){
-    let currentKey = apiKey;
-    if(!currentKey){
-      currentKey = window.prompt("Please enter your Google Gemini API Key:");
-      if(!currentKey) return; 
-      setApiKey(currentKey);
-    }
-    setLoad(true);
-    setRes(attempt === 1 ? "" : "Retrying... (" + attempt + "/3)");
+  const aiLinks = {
+    chatgpt: "https://chatgpt.com/", gemini: "https://gemini.google.com/", 
+    claude: "https://claude.ai/", perplexity: "https://www.perplexity.ai/",
+    grok: "https://grok.com/", deepseek: "https://chat.deepseek.com/"
+  };
 
-    try{
-      const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+currentKey,{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({contents: [{ parts: [{ text: ctx+"\n\n"+prompt }] }]})
-      });
-      const d=await r.json();
-      if(d.error){
-        if(attempt < 3) setTimeout(() => run(attempt + 1), 2000);
-        else { setRes("Error: " + d.error.message); setLoad(false); }
+  const handleBridge = async () => {
+    try {
+      setStatus("copying");
+      const finalPrompt = `ABOUT ME / ASSISTANT PERSONA:\n${identity}\n\nDATA TO ANALYZE (${label}):\n${prompt}\n\nSTRATEGIC INSTRUCTIONS:\n1. Review the data and analyze impact.\n2. Provide insights on betterment and improvisation.\n3. End with an encouragement quote.`;
+      
+      // Robust Copy for Windows/Android/iOS
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(finalPrompt);
       } else {
-        setRes(d.candidates[0].content.parts[0].text);
-        setLoad(false);
+        const textArea = document.createElement("textarea");
+        textArea.value = finalPrompt; document.body.appendChild(textArea);
+        textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea);
       }
-    }catch(e){setRes("Network Error."); setLoad(false);}
-  }
-  return <div style={{marginTop:20}}>
-    <button onClick={()=>run(1)} disabled={load} className="pbtn" style={{background:load?"#888375":"#232528"}}>{load?"Analysing...":"✦ "+label}</button>
-    {res&&<div className="ai">{res}</div>}
+      
+      setStatus("copied");
+      setTimeout(() => {
+        window.open(aiLinks[aiModel], "_blank");
+        setStatus("idle");
+      }, 1500);
+    } catch (err) { setStatus("idle"); alert("Clipboard error."); }
+  };
+
+  return <div className="ai-bridge">
+    <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12}}>
+      <span className="lbl" style={{marginBottom:0}}>Choose AI Model</span>
+      <select value={aiModel} onChange={(e) => setAiModel(e.target.value)} style={{padding: "4px 8px", background: "#F8F7F2", border: "1px solid #C4BEAD", borderRadius: "4px", fontFamily: "'Merriweather', serif", fontSize: 12}}>
+        <option value="chatgpt">ChatGPT</option><option value="gemini">Gemini</option>
+        <option value="claude">Claude</option><option value="perplexity">Perplexity</option>
+        <option value="grok">Grok AI</option><option value="deepseek">DeepSeek</option>
+      </select>
+    </div>
+    <button onClick={handleBridge} disabled={status !== "idle"} className="pbtn" style={{background: status === "copied" ? "#3A4533" : "#232528", marginTop: 0}}>
+      {status === "idle" ? "✦ "+label : "✓ Copied! Opening AI..."}
+    </button>
   </div>;
 }
 
-// GENERIC LOGGER TEMPLATE (Used for Journal and Custom Sections)
 function GenericLogger({ sectionId, title, icon, tagsStr }) {
   const [entries, setEntries] = useLocalStorage(`entries_${sectionId}`, []);
   const [text, setText] = useState("");
@@ -147,7 +157,7 @@ function GenericLogger({ sectionId, title, icon, tagsStr }) {
   }
 
   const total = entries.reduce((s, e) => s + e.mins, 0);
-  const log = entries.map(e => `${e.time} | ${e.cat} | ${Math.floor(e.mins/60)}h${e.mins%60}m | ${e.text}`).join("\n");
+  const log = entries.map(e => `${e.time} | ${e.cat} | ${e.mins}m | ${e.text}`).join("\n");
 
   return (
     <div>
@@ -161,34 +171,28 @@ function GenericLogger({ sectionId, title, icon, tagsStr }) {
           <div style={{ fontSize: 11, color: "#C4BEAD", marginTop: 4, letterSpacing: 1 }}>TOTAL TIME</div>
         </div>
       </div>
-
       <div className="card">
         <h3 style={{marginBottom: 10}}>{icon} {title}</h3>
-        <span className="lbl">Start Time</span>
         <input type="time" value={time} onChange={e => setTime(e.target.value)} className="inp" style={{ width: "auto" }} />
-        <span className="lbl">Entry</span>
-        <textarea rows={2} value={text} onChange={e => setText(e.target.value)} placeholder={`Log your ${title} activity...`} className="inp" />
-        <span className="lbl">Categories</span>
+        <textarea rows={2} value={text} onChange={e => setText(e.target.value)} placeholder={`Log ${title}...`} className="inp" />
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 12 }}>
           {categories.map(c => <Tag key={c.n} label={c.n} sel={cat === c.n} onClick={() => setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br} />)}
         </div>
-        <span className="lbl">Duration</span>
         <Dur h={h} m={m} sh={setH} sm={setM} />
         <button onClick={add} className="pbtn" style={{ background: "#232528" }}>+ Log to {title}</button>
       </div>
-
       {[...entries].reverse().map(e => {
         const c = categories.find(x => x.n === e.cat);
         return (
           <div key={e.id} className="card" style={{ borderLeft: "4px solid " + (c?.br || "#7A2A3B") }}>
             <button className="dbtn" onClick={() => setEntries(entries.filter(x => x.id !== e.id))}>×</button>
-            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 4, background: c?.bg || "#EBE7DD", color: c?.tx || "#000", fontWeight: 700, textTransform: "uppercase" }}>{e.cat}</span>
-            <div style={{ fontSize: 15, color: "#000", marginTop: 10, lineHeight: 1.6 }}>{e.text}</div>
-            <div style={{ fontSize: 12, color: "#888375", marginTop: 8, fontStyle: "italic" }}>{e.time} · {Math.floor(e.mins/60)}h {e.mins%60}m</div>
+            <span style={{ fontSize: 11, fontWeight: 700 }}>{e.cat}</span>
+            <div style={{ fontSize: 15, marginTop: 10 }}>{e.text}</div>
+            <div style={{ fontSize: 12, color: "#888375", marginTop: 8 }}>{e.time} · {e.mins}m</div>
           </div>
         );
       })}
-      {entries.length > 0 && <AIBtn label={`Review ${title}`} prompt={`Review these ${title} logs:\n${log}\nTotal: ${Math.floor(total/60)}h ${total%60}m`} />}
+      {entries.length > 0 && <AIBtn label={`Review ${title}`} prompt={log} />}
     </div>
   );
 }
@@ -202,98 +206,65 @@ function Finance(){
   const [expenses,setExpenses]=useLocalStorage("fin_exp",[]); const [invs,setInvs]=useLocalStorage("fin_inv",[]);
   const [expStr]=useLocalStorage("sys_exp","Food, Transport, Bills, Family, Fun, Other");
   const [invStr]=useLocalStorage("sys_inv","Skills, Health, Savings, Other");
-  const ECATS = expStr.split(",").map(s=>s.trim()).filter(x=>x);
-  const ICATS = invStr.split(",").map(s=>s.trim()).filter(x=>x);
   const [tab,setTab]=useState("exp");
   const [ed,setEd]=useState("");const [ea,setEa]=useState("");const [ec,setEc]=useState(null);
-  const [id,setId]=useState("");const [ia,setIa]=useState("");const [ic,setIc]=useState(null);
   const te=expenses.reduce((s,e)=>s+parseFloat(e.a||0),0); const ti=invs.reduce((s,e)=>s+parseFloat(e.a||0),0);
-  function addE(){if(!ed||!ea||!ec)return alert("Fill all");setExpenses([...expenses,{id:Date.now(),d:ed,a:ea,c:ec}]);setEd("");setEa("");setEc(null);}
-  function addI(){if(!id||!ia||!ic)return alert("Fill all");setInvs([...invs,{id:Date.now(),d:id,a:ia,c:ic}]);setId("");setIa("");setIc(null);}
+  const log="Expenses:\n"+expenses.map(e=>`- ${e.c}: ${e.d} ₹${e.a}`).join("\n") + "\nInvestments:\n"+invs.map(e=>`- ${e.c}: ${e.d} ₹${e.a}`).join("\n");
+  function addE(){setExpenses([...expenses,{id:Date.now(),d:ed,a:ea,c:ec}]);setEd("");setEa("");setEc(null);}
+  function addI(){setInvs([...invs,{id:Date.now(),d:id,a:ia,c:ic}]);setId("");setIa("");setIc(null);}
   return <div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
-      <div className="card" style={{textAlign:"center", background:"#F0EBEB", border:"1px solid #B06373"}}><div style={{fontSize:24, color:"#7A2A3B"}}>₹{te}</div><div className="lbl">SPENT</div></div>
-      <div className="card" style={{textAlign:"center", background:"#EBECE7", border:"1px solid #69785D"}}><div style={{fontSize:24, color:"#3A4533"}}>₹{ti}</div><div className="lbl">INVESTED</div></div>
+      <div className="card" style={{textAlign:"center", background:"#F0EBEB", border:"1px solid #B06373"}}><div style={{fontSize:24}}>₹{te}</div><div className="lbl">SPENT</div></div>
+      <div className="card" style={{textAlign:"center", background:"#EBECE7", border:"1px solid #69785D"}}><div style={{fontSize:24}}>₹{ti}</div><div className="lbl">INVESTED</div></div>
     </div>
     <div style={{display:"flex",gap:8,marginBottom:14}}>
       <button onClick={()=>setTab("exp")} className="pbtn" style={{flex:1, background:tab==="exp"?"#232528":"#C4BEAD", marginTop:0}}>Expenses</button>
       <button onClick={()=>setTab("inv")} className="pbtn" style={{flex:1, background:tab==="inv"?"#232528":"#C4BEAD", marginTop:0}}>Investments</button>
     </div>
     <div className="card">
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{tab==="exp"?ECATS.map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>):ICATS.map(c=><Tag key={c} label={c} sel={ic===c} onClick={()=>setIc(c)} bg="#EBECE7" tx="#3A4533" br="#69785D"/>)}</div>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:12}}>{tab==="exp"?expStr.split(",").map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>):invStr.split(",").map(c=><Tag key={c} label={c} sel={ic===c} onClick={()=>setIc(c)} bg="#EBECE7" tx="#3A4533" br="#69785D"/>)}</div>
       <input value={tab==="exp"?ed:id} onChange={e=>tab==="exp"?setEd(e.target.value):setId(e.target.value)} placeholder="Description" className="inp"/>
       <input type="number" value={tab==="exp"?ea:ia} onChange={e=>tab==="exp"?setEa(e.target.value):setIa(e.target.value)} placeholder="Amount" className="inp"/>
-      <button onClick={tab==="exp"?addE:addI} className="pbtn" style={{background:tab==="exp"?"#7A2A3B":"#3A4533"}}>+ Log {tab==="exp"?"Expense":"Investment"}</button>
+      <button onClick={tab==="exp"?addE:addI} className="pbtn" style={{background:tab==="exp"?"#7A2A3B":"#3A4533"}}>+ Log</button>
     </div>
+    {(expenses.length>0||invs.length>0) && <AIBtn label="Finance Audit" prompt={log} />}
   </div>;
 }
 
 function Gym(){
   const [gymStr]=useLocalStorage("sys_gym","Push, Pull, Legs, Core, Cardio, Rest");
-  const MUSCLES = gymStr.split(",").map(s=>s.trim()).filter(x=>x);
-  const [muscle,setMuscle]=useLocalStorage("gym_m",null); const [energy,setEnergy]=useLocalStorage("gym_e",null);
-  const [exs,setExs]=useLocalStorage("gym_exs",[]); const [notes,setNotes]=useLocalStorage("gym_n","");
-  const [en,setEn]=useState("");const [es,setEs]=useState("");const [er,setEr]=useState("");const [ew,setEw]=useState("");
-  const [h,setH]=useLocalStorage("gym_h",0);const [m,setM]=useLocalStorage("gym_min",45);
-  function addEx(){if(!en.trim())return;setExs([...exs,{id:Date.now(),n:en,s:es,r:er,w:ew}]);setEn("");setEs("");setEr("");setEw("");}
+  const [exs,setExs]=useLocalStorage("gym_exs",[]); const [en,setEn]=useState("");
+  const log="Workout Session:\n"+exs.map(e=>`- ${e.n}`).join("\n");
+  function add(){setExs([...exs,{id:Date.now(),n:en}]);setEn("");}
   return <div>
-    <div className="card">
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:16}}>{MUSCLES.map(g=><Tag key={g} label={g} sel={muscle===g} onClick={()=>setMuscle(g)} bg="#EBECE7" tx="#3A4533" br="#69785D"/>)}</div>
-      <Dur h={h} m={m} sh={setH} sm={setM}/>
-    </div>
-    <div className="card">
-      <input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise Name" className="inp"/>
-      <div style={{display:"flex",gap:10}}><input value={es} onChange={e=>setEs(e.target.value)} placeholder="Sets" className="inp"/><input value={er} onChange={e=>setEr(e.target.value)} placeholder="Reps" className="inp"/><input value={ew} onChange={e=>setEw(e.target.value)} placeholder="Weight" className="inp"/></div>
-      <button onClick={addEx} className="pbtn" style={{background:"#3A4533"}}>+ Add Movement</button>
-      <div style={{marginTop:16}}>{exs.map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid #EBE7DD"}}><span style={{fontSize:14}}>{e.n}</span><span style={{fontSize:14, fontWeight:700}}>{e.s}x{e.r}@{e.w}</span></div>)}</div>
-    </div>
+    <div className="card"><input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise" className="inp"/><button onClick={add} className="pbtn" style={{background:"#3A4533"}}>+ Add</button></div>
+    {exs.length>0 && <AIBtn label="Training Review" prompt={log}/>}
   </div>;
 }
 
 function Skills(){
-  const [skillStr]=useLocalStorage("sys_skill","Design, Coding, Marketing, Reading");
-  const SUBJECTS = skillStr.split(",").map(s=>s.trim()).filter(x=>x);
-  const [sub,setSub]=useLocalStorage("sk_s",null);
-  const [topic,setTopic]=useLocalStorage("sk_t",""); const [learned,setLearned]=useLocalStorage("sk_l","");
-  const [h,setH]=useLocalStorage("sk_h",0);const [m,setM]=useLocalStorage("sk_m",50);
-  return <div>
-    <div className="card">
-      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>{SUBJECTS.map(s=><Tag key={s} label={s} sel={sub===s} onClick={()=>setSub(s)} bg="#E8ECEF" tx="#2A3B4C" br="#58718A"/>)}</div>
-      <Dur h={h} m={m} sh={setH} sm={setM}/>
-    </div>
-    <div className="card">
-      <input value={topic} onChange={e=>setTopic(e.target.value)} className="inp" placeholder="Topic"/>
-      <textarea rows={2} value={learned} onChange={e=>setLearned(e.target.value)} className="inp" placeholder="Takeaways"/>
-      <AIBtn label="Synthesize" prompt={`Subject: ${sub}, Topic: ${topic}, Learned: ${learned}`} />
-    </div>
+  const [topic,setTopic]=useState(""); const [learned,setLearned]=useState("");
+  const log=`Topic: ${topic}\nTakeaways: ${learned}`;
+  return <div className="card">
+    <input value={topic} onChange={e=>setTopic(e.target.value)} placeholder="Subject" className="inp"/>
+    <textarea value={learned} onChange={e=>setLearned(e.target.value)} placeholder="Learnings..." className="inp"/>
+    <AIBtn label="Skill Synthesis" prompt={log}/>
   </div>;
 }
 
 function Settings(){
   const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "");
-  const [sysAct, setSysAct] = useLocalStorage("sys_act", "Deep work, Meetings, Commute, Break, Admin");
-  const [sysExp, setSysExp] = useLocalStorage("sys_exp", "Food, Transport, Bills, Family, Fun, Other");
-  const [sysInv, setSysInv] = useLocalStorage("sys_inv", "Skills, Health, Savings, Other");
-  const [sysGym, setSysGym] = useLocalStorage("sys_gym", "Push, Pull, Legs, Core, Cardio, Rest");
-  const [sysSkill, setSysSkill] = useLocalStorage("sys_skill", "Design, Coding, Marketing, Reading");
-  
   const [tabsStr, setTabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
   const [draftTabs, setDraftTabs] = useState(() => JSON.parse(tabsStr));
-
-  const save = () => {
-    setSysCtx(sysCtx); setSysAct(sysAct); setSysExp(sysExp); setSysInv(sysInv); setSysGym(sysGym); setSysSkill(sysSkill);
-    setTabsStr(JSON.stringify(draftTabs));
-    alert("✅ Settings Saved!");
-  };
-
+  const save = () => { setTabsStr(JSON.stringify(draftTabs)); alert("Saved!"); };
+  
   return <div>
-    <div className="card">
-      <span className="lbl">Assistant Persona / Identity</span>
-      <textarea rows={3} value={sysCtx} onChange={e=>setSysCtx(e.target.value)} className="inp" placeholder="Who are you?"/>
+    <div className="card" style={{border: "1.5px solid #7A2A3B"}}>
+      <span className="lbl">Identity / Assistant Persona</span>
+      <textarea rows={6} value={sysCtx} onChange={e=>setSysCtx(e.target.value)} className="inp" placeholder="Who are you? What are your goals?"/>
     </div>
-
     <div className="card">
-      <h3 style={{marginBottom:10}}>Custom Sections</h3>
+      <h3 style={{marginBottom:10}}>Navigation & Tags</h3>
       {draftTabs.map((t, idx) => (
         <div key={t.id} className="card" style={{padding:12, marginBottom:10, background:"#EBE7DD"}}>
           <div style={{display:"flex", gap:8, marginBottom:8}}>
@@ -301,20 +272,12 @@ function Settings(){
             <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" style={{marginBottom:0}} disabled={t.id === "settings"} />
             {t.id !== "settings" && <button onClick={() => setDraftTabs(draftTabs.filter(x => x.id !== t.id))} style={{color:"#A8A291", border:"none", background:"none", fontSize:20}}>×</button>}
           </div>
-          {/* CATEGORIES FOR THIS SECTION */}
-          <span className="lbl">Tags for this section</span>
-          <input value={t.tags || ""} onChange={e => { const n = [...draftTabs]; n[idx].tags = e.target.value; setDraftTabs(n); }} className="inp" placeholder="Tag 1, Tag 2, Tag 3" style={{marginBottom:0}} />
+          <span className="lbl">Section Tags</span>
+          <input value={t.tags || ""} onChange={e => { const n = [...draftTabs]; n[idx].tags = e.target.value; setDraftTabs(n); }} className="inp" placeholder="Tag 1, Tag 2" style={{marginBottom:0}} />
         </div>
       ))}
-      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section", tags: "General, Urgent" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528"}}>+ Add New Section</button>
-    </div>
-
-    <div className="card">
-      <span className="lbl">Default Categories</span>
-      <input value={sysAct} onChange={e=>setSysAct(e.target.value)} className="inp" placeholder="Journal Tags"/>
-      <input value={sysGym} onChange={e=>setSysGym(e.target.value)} className="inp" placeholder="Gym Tags"/>
-      <input value={sysSkill} onChange={e=>setSysSkill(e.target.value)} className="inp" placeholder="Study Tags"/>
-      <button onClick={save} className="pbtn" style={{background: "#232528"}}>💾 Save All Configurations</button>
+      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section", tags: "General" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528"}}>+ Add Tab</button>
+      <button onClick={save} className="pbtn" style={{background: "#232528", marginTop:12}}>💾 Save Layout</button>
     </div>
   </div>;
 }
@@ -339,20 +302,15 @@ function App(){
       <h1 style={{fontSize: 32}}>MY CHRONICLES</h1>
       <p style={{fontSize: 14, fontStyle:"italic"}}>{greet}. {new Date().toLocaleDateString("en-US", {weekday:"long", month:"long", day:"numeric"})}</p>
     </div>
-
     <div style={{padding: "16px"}}>
       {tabs.map(t => (
         <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
-          {t.id === "activity" ? <Activity/> :
-           t.id === "finance" ? <Finance/> :
-           t.id === "gym" ? <Gym/> :
-           t.id === "skills" ? <Skills/> :
-           t.id === "settings" ? <Settings/> :
-           <GenericLogger sectionId={t.id} title={t.label} icon={t.icon} tagsStr={t.tags} />}
+          {t.id === "activity" ? <Activity/> : t.id === "finance" ? <Finance/> :
+           t.id === "gym" ? <Gym/> : t.id === "skills" ? <Skills/> :
+           t.id === "settings" ? <Settings/> : <GenericLogger sectionId={t.id} title={t.label} icon={t.icon} tagsStr={t.tags} />}
         </div>
       ))}
     </div>
-
     <div className="nav">
       {tabs.map(t => <button key={t.id} className="nb" onClick={() => setTab(t.id)}>
         <span style={{fontSize: 20, color: tab === t.id ? "#7A2A3B" : "#A8A291"}}>{t.icon}</span>
