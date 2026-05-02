@@ -25,7 +25,7 @@ h1, h2, h3, h4 {font-family:'Playfair Display',serif; color:#7A2A3B; letter-spac
 .dbtn{float:right;background:none;border:none;color:#A8A291;font-size:18px;cursor:pointer}
 .nav{position:fixed;bottom:0;left:0;right:0;background:#F8F7F2;border-top:1px solid #D9D4C5;display:flex;padding:10px 4px 16px;overflow-x:auto;box-shadow:0 -2px 10px rgba(0,0,0,0.03);}
 .nb{min-width:60px;flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;padding:6px 2px}
-.ai-bridge{margin-top:24px; padding: 16px; background: #EBE7DD; border: 1px dashed #C4BEAD; borderRadius: 4px;}
+.ai-bridge{margin-top:24px; padding: 16px; background: #EBE7DD; border: 1px dashed #C4BEAD; border-radius: 4px;}
 </style>
 </head>
 <body>
@@ -89,26 +89,35 @@ function Dur({h,m,sh,sm}){
   </div>;
 }
 
-// UNIVERSAL BRIDGE: Works on all tabs
+// STRATEGIC BRIDGE: Automatically includes "About Me" for context
 function AIBtn({prompt, label}){
   const [status, setStatus] = useState("idle");
   const [aiModel, setAiModel] = useLocalStorage("pref_ai_model", "chatgpt");
-  const [masterCtx] = useLocalStorage("sys_ctx", "");
-  const [yesterdayMem] = useLocalStorage("yesterday_mem", "");
+  const [aboutMe] = useLocalStorage("sys_ctx", "");
 
   const aiLinks = {
     chatgpt: "https://chatgpt.com/", gemini: "https://gemini.google.com/", 
     claude: "https://claude.ai/", perplexity: "https://www.perplexity.ai/",
-    grok: "https://grok.com/", deepseek: "https://chat.deepseek.com/", 
-    manual: null 
+    grok: "https://grok.com/", deepseek: "https://chat.deepseek.com/"
   };
 
   const handleBridge = async () => {
     try {
       setStatus("copying");
-      const finalPrompt = `IDENTITY: ${masterCtx}\n\nPREVIOUS STATE: ${yesterdayMem}\n\nTODAY'S DATA:\n${prompt}\n\nINSTRUCTIONS: 1. Provide ${label}. 2. End with a 2-sentence "MEMORY TOKEN" for tomorrow.`;
+      const finalPrompt = `
+ABOUT THE AUTHOR (IDENTITY CONTEXT):
+${aboutMe}
+
+CURRENT LOGS (${label}):
+${prompt}
+
+INSTRUCTIONS FOR AI:
+1. Review the data above within the context of the author's identity and goals.
+2. Provide precise insights on how this day was spent and where time/energy was used effectively.
+3. Suggest 3 specific improvements to optimize tomorrow's output.
+4. End with a highly relevant encouragement quote.
+      `.trim();
       
-      // Robust cross-platform copy
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(finalPrompt);
       } else {
@@ -122,22 +131,24 @@ function AIBtn({prompt, label}){
         if(aiLinks[aiModel]) window.open(aiLinks[aiModel], "_blank");
         setStatus("idle");
       }, 1500);
-    } catch (err) { setStatus("idle"); alert("Clipboard error. Please try again."); }
+    } catch (err) { setStatus("idle"); alert("Clipboard error."); }
   };
 
   return <div className="ai-bridge">
     <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12}}>
-      <span className="lbl" style={{marginBottom:0}}>Intelligence Hub</span>
+      <span className="lbl" style={{marginBottom:0}}>Coaching Hub</span>
       <select value={aiModel} onChange={(e) => setAiModel(e.target.value)} style={{padding: "4px 8px", background: "#F8F7F2", border: "1px solid #C4BEAD", borderRadius: "4px", fontFamily: "'Merriweather', serif", fontSize: 12}}>
         <option value="chatgpt">ChatGPT</option><option value="gemini">Gemini</option>
         <option value="claude">Claude</option><option value="perplexity">Perplexity</option>
         <option value="grok">Grok AI</option><option value="deepseek">DeepSeek</option>
-        <option value="manual">Manual Copy Only</option>
       </select>
     </div>
     <button onClick={handleBridge} disabled={status !== "idle"} className="pbtn" style={{background: status === "copied" ? "#3A4533" : "#232528", marginTop: 0}}>
-      {status === "idle" ? "✦ " + label : status === "copying" ? "Packaging..." : "✓ Copied! Opening AI..."}
+      {status === "idle" ? "✦ " + label : "✓ Profile + Log Ready"}
     </button>
+    <div style={{fontSize: 11, color: "#888375", marginTop: 10, textAlign: "center", fontStyle: "italic"}}>
+        100% Private. Paste this in AI to see how today aligns with your goals.
+    </div>
   </div>;
 }
 
@@ -150,7 +161,7 @@ function Activity(){
   const [time,setTime]=useState(()=>{const n=new Date();return String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");});
   
   function add(){
-    if(!text.trim()||!cat)return alert("Fill info");
+    if(!text.trim()||!cat)return alert("Details needed");
     setEntries([...entries,{id:Date.now(),text,cat,mins:h*60+m,time}]);
     setText("");setCat(null);setH(0);setM(30);
   }
@@ -158,103 +169,91 @@ function Activity(){
   const log=entries.map(e=>`${e.time} | ${e.cat} | ${e.mins}m | ${e.text}`).join("\n");
   
   return <div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
-      <div style={{background:"#232528",borderRadius:8,padding:16,color:"#F8F7F2",textAlign:"center",borderBottom:"4px solid #7A2A3B"}}>
-        <div style={{fontSize:28,fontFamily:"'Playfair Display',serif"}}>{entries.length}</div><span className="lbl" style={{color:"#C4BEAD"}}>Entries</span>
-      </div>
-      <div style={{background:"#232528",borderRadius:8,padding:16,color:"#F8F7F2",textAlign:"center",borderBottom:"4px solid #7A2A3B"}}>
-        <div style={{fontSize:24,fontFamily:"'Playfair Display',serif",marginTop:2}}>{Math.floor(total/60)}h {total%60}m</div><span className="lbl" style={{color:"#C4BEAD"}}>Tracked</span>
-      </div>
-    </div>
     <div className="card">
-      <span className="lbl">New Entry</span>
+      <span className="lbl">Log Entry</span>
       <input type="time" value={time} onChange={e=>setTime(e.target.value)} className="inp" style={{width:"auto"}}/>
-      <textarea rows={2} value={text} onChange={e=>setText(e.target.value)} placeholder="What happened?" className="inp"/>
-      <div style={{display:"flex",flexWrap:"wrap",marginBottom:6}}>{defCats.map(c=><Tag key={c.n} label={c.n} sel={cat===c.n} onClick={()=>setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br}/>)}</div>
-      <Dur h={h} m={m} sh={setH} sm={setM}/><button onClick={add} className="pbtn" style={{background:"#232528"}}>+ Log</button>
+      <textarea rows={2} value={text} onChange={e=>setText(e.target.value)} placeholder="Chronicle this..." className="inp"/>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:10}}>{defCats.map(c=><Tag key={c.n} label={c.n} sel={cat===c.n} onClick={()=>setCat(c.n)} bg={c.bg} tx={c.tx} br={c.br}/>)}</div>
+      <Dur h={h} m={m} sh={setH} sm={setM}/><button onClick={add} className="pbtn" style={{background:"#232528"}}>+ Save Entry</button>
     </div>
     {[...entries].reverse().map(e=><div key={e.id} className="card" style={{borderLeft:"4px solid #7A2A3B"}}>
       <button className="dbtn" onClick={()=>setEntries(entries.filter(x=>x.id!==e.id))}>×</button>
       <span style={{fontSize:11,fontWeight:700}}>{e.cat}</span><div style={{fontSize:15,marginTop:8}}>{e.text}</div>
     </div>)}
-    {entries.length>0 && <AIBtn label="Daily Review" prompt={log}/>}
+    {entries.length>0 && <AIBtn label="Journal Analysis" prompt={log}/>}
   </div>;
 }
 
 function Finance(){
-  const [expenses,setExpenses]=useLocalStorage("fin_exp",[]); const [invs,setInvs]=useLocalStorage("fin_inv",[]);
+  const [expenses,setExpenses]=useLocalStorage("fin_exp",[]);
   const [expStr]=useLocalStorage("sys_exp","Food, Transport, Bills, Family, Fun, Other");
-  const [invStr]=useLocalStorage("sys_inv","Skills, Health, Savings, Other");
-  const [tab,setTab]=useState("exp");
   const [ed,setEd]=useState("");const [ea,setEa]=useState("");const [ec,setEc]=useState(null);
   const te=expenses.reduce((s,e)=>s+parseFloat(e.a||0),0);
   const log="Expenses:\n"+expenses.map(e=>`- ${e.c}: ${e.d} ₹${e.a}`).join("\n");
-  
   function addE(){setExpenses([...expenses,{id:Date.now(),d:ed,a:ea,c:ec}]);setEd("");setEa("");setEc(null);}
 
   return <div>
-    <div className="card" style={{textAlign:"center"}}><div style={{fontSize:24,fontWeight:700}}>₹{te} Spent</div></div>
+    <div className="card" style={{textAlign:"center"}}><div style={{fontSize:24,fontWeight:700}}>₹{te} Total Spent</div></div>
     <div className="card">
-      <span className="lbl">Log Money</span>
       <input value={ed} onChange={e=>setEd(e.target.value)} placeholder="Description" className="inp"/>
       <input type="number" value={ea} onChange={e=>setEa(e.target.value)} placeholder="Amount" className="inp"/>
-      <div style={{display:"flex",flexWrap:"wrap"}}>{expStr.split(",").map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>)}</div>
+      <div style={{display:"flex",flexWrap:"wrap",marginBottom:10}}>{expStr.split(",").map(c=><Tag key={c} label={c} sel={ec===c} onClick={()=>setEc(c)}/>)}</div>
       <button onClick={addE} className="pbtn" style={{background:"#7A2A3B"}}>+ Add Expense</button>
     </div>
-    {expenses.length>0 && <AIBtn label="Finance Check" prompt={log}/>}
+    {expenses.length>0 && <AIBtn label="Financial Audit" prompt={log}/>}
   </div>;
 }
 
 function Gym(){
-  const [exs,setExs]=useLocalStorage("gym_exs",[]); const [h,setH]=useState(0);const [m,setM]=useState(45);
-  const [en,setEn]=useState("");
+  const [exs,setExs]=useLocalStorage("gym_exs",[]); const [en,setEn]=useState("");
   function add(){setExs([...exs,{id:Date.now(),n:en}]);setEn("");}
-  const log="Workout:\n"+exs.map(e=>`- ${e.n}`).join("\n");
+  const log="Workout Session:\n"+exs.map(e=>`- ${e.n}`).join("\n");
   return <div>
-    <div className="card"><span className="lbl">Training</span><input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise" className="inp"/><button onClick={add} className="pbtn" style={{background:"#3A4533"}}>+ Add</button></div>
-    {exs.length>0 && <AIBtn label="Assess Training" prompt={log}/>}
+    <div className="card"><input value={en} onChange={e=>setEn(e.target.value)} placeholder="Exercise" className="inp"/><button onClick={add} className="pbtn" style={{background:"#3A4533"}}>+ Add</button></div>
+    {exs.length>0 && <AIBtn label="Training Review" prompt={log}/>}
   </div>;
 }
 
 function Skills(){
   const [topic,setTopic]=useState(""); const [learned,setLearned]=useState("");
-  const log=`Topic: ${topic}\nLearned: ${learned}`;
+  const log=`Topic: ${topic}\nTakeaways: ${learned}`;
   return <div className="card">
-    <input value={topic} onChange={e=>setTopic(e.target.value)} placeholder="Topic" className="inp"/>
-    <textarea value={learned} onChange={e=>setLearned(e.target.value)} placeholder="Takeaways" className="inp"/>
-    <AIBtn label="Synthesize Knowledge" prompt={log}/>
+    <input value={topic} onChange={e=>setTopic(e.target.value)} placeholder="Subject" className="inp"/>
+    <textarea value={learned} onChange={e=>setLearned(e.target.value)} placeholder="Learnings..." className="inp"/>
+    <AIBtn label="Skill Synthesis" prompt={log}/>
   </div>;
 }
 
 function CustomTab({ id, title, icon }) {
   const [text, setText] = useLocalStorage(`custom_tab_${id}`, "");
   return <div>
-    <div className="card"><h3>{icon} {title}</h3><textarea rows={10} value={text} onChange={e=>setText(e.target.value)} className="inp" placeholder="Journal..."/></div>
-    <AIBtn label={`Analyze ${title}`} prompt={text}/>
+    <div className="card"><h3>{icon} {title}</h3><textarea rows={10} value={text} onChange={e=>setText(e.target.value)} className="inp" placeholder="Record logs..."/></div>
+    <AIBtn label={`${title} Analysis`} prompt={text}/>
   </div>;
 }
 
 function Settings(){
-  const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "I am a Senior Linguist focusing on health and growth.");
+  const [sysCtx, setSysCtx] = useLocalStorage("sys_ctx", "");
   const [tabsStr, setTabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
   const [draftTabs, setDraftTabs] = useState(JSON.parse(tabsStr));
-  const save = () => { setTabsStr(JSON.stringify(draftTabs)); alert("Saved!"); };
+  const save = () => { setTabsStr(JSON.stringify(draftTabs)); alert("Profile & Navigation Saved!"); };
   
   return <div>
-    <div className="card">
-      <span className="lbl">Master Identity Context</span>
-      <textarea rows={4} value={sysCtx} onChange={e=>setSysCtx(e.target.value)} className="inp" placeholder="Who are you? What are your goals?"/>
+    <div className="card" style={{border: "1.5px solid #7A2A3B"}}>
+      <h3 className="lbl" style={{color: "#7A2A3B"}}>Identity Context (About Me)</h3>
+      <p style={{fontSize: 12, fontStyle: "italic", marginBottom: 12, color: "#5A544A"}}><b>Tip:</b> Filling this helps the AI provide high-level, relevant coaching for how your day was spent.</p>
+      <textarea rows={6} value={sysCtx} onChange={e=>setSysCtx(e.target.value)} className="inp" placeholder="Example: I am a Senior Linguist mastering AI. I am currently on a 12-week fitness journey (Pathaan Project)..."/>
     </div>
     <div className="card">
-      <h3 className="lbl">Custom Categories</h3>
+      <h3 className="lbl">Navigation Slots</h3>
       {draftTabs.map((t, idx) => (
         <div key={t.id} style={{display: "flex", gap: 8, marginBottom: 8}}>
           <input value={t.icon} onChange={e => { const n = [...draftTabs]; n[idx].icon = e.target.value; setDraftTabs(n); }} className="inp" style={{width: 40}} />
           <input value={t.label} onChange={e => { const n = [...draftTabs]; n[idx].label = e.target.value; setDraftTabs(n); }} className="inp" disabled={t.id === "settings"} />
         </div>
       ))}
-      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Section" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528"}}>+ Add</button>
-      <button onClick={save} className="pbtn" style={{background: "#232528"}}>Save Layout</button>
+      <button onClick={() => setDraftTabs([...draftTabs, { id: "tab_"+Date.now(), icon: "📝", label: "New Tab" }])} className="pbtn" style={{background: "transparent", color: "#232528", border: "1px solid #232528"}}>+ Add Slot</button>
+      <button onClick={save} className="pbtn" style={{background: "#232528"}}>Update App</button>
     </div>
   </div>;
 }
@@ -263,24 +262,33 @@ function App(){
   const [tabsStr] = useLocalStorage("sys_tabs", JSON.stringify(DEFAULT_TABS));
   const tabs = JSON.parse(tabsStr);
   const [tab, setTab] = useState("activity");
-  const [yMem, setYMem] = useLocalStorage("yesterday_mem", "");
+  const [aboutMe, setAboutMe] = useLocalStorage("sys_ctx", "");
+  const [showSetup, setShowSetup] = useState(aboutMe === "");
 
-  const hr = new Date().getHours();
-  const greet = hr < 12 ? "Good morning." : hr < 17 ? "Good afternoon." : "Good evening.";
-  const today = new Date().toLocaleDateString("en-US", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+  const finishSetup = () => { if(aboutMe.trim() !== "") setShowSetup(false); else alert("Please write a few sentences first."); };
 
   return <div style={{maxWidth: 520, margin: "0 auto", paddingBottom: 90}}>
+    {showSetup && (
+      <div style={{position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(235,231,221,0.98)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20}}>
+        <div className="card" style={{width: "100%", maxWidth: 400, border: "2px solid #7A2A3B"}}>
+          <h2 style={{marginBottom: 12}}>Editor's Profile</h2>
+          <p style={{fontSize: 14, marginBottom: 20, lineHeight: 1.6}}>
+            <b>Who is the author of these Chronicles?</b> Write 3-4 sentences about your current goals and identity. 
+            <br/><br/>
+            <i>Filling this profile helps the AI provide deeply relevant insights and coaching based on how your day was spent.</i>
+          </p>
+          <textarea rows={6} value={aboutMe} onChange={(e) => setAboutMe(e.target.value)} className="inp" placeholder="Example: I am Krishna, a Senior Linguist..."/>
+          <button onClick={finishSetup} className="pbtn" style={{background: "#7A2A3B"}}>Initialize Chronicles</button>
+        </div>
+      </div>
+    )}
+
     <div style={{padding: "30px 16px 20px", textAlign:"center", borderBottom:"1px solid #D9D4C5"}}>
       <h1 style={{fontSize: 32, color: "#232528"}}>MY CHRONICLES</h1>
-      <p style={{fontSize: 14, fontStyle:"italic"}}>{greet} {today}</p>
+      <p style={{fontSize: 14, fontStyle:"italic"}}>{new Date().toLocaleDateString("en-US", {weekday: "long", day: "numeric", month: "long"})}</p>
     </div>
 
     <div style={{padding: "16px"}}>
-      <div className="card" style={{border: "1px solid #7A2A3B", background: "#F0EBEB"}}>
-        <span className="lbl" style={{color: "#7A2A3B"}}>Memory Loop Token</span>
-        <textarea rows={2} value={yMem} onChange={(e) => setYMem(e.target.value)} placeholder="Paste yesterday's AI summary here..." className="inp" style={{marginBottom: 0}}/>
-      </div>
-
       {tabs.map(t => (
         <div key={t.id} style={{display: tab === t.id ? "block" : "none"}}>
           {t.id === "activity" ? <Activity/> : t.id === "finance" ? <Finance/> :
