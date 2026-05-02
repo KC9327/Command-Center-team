@@ -400,16 +400,16 @@ function Settings(){
   </div>;
 }
 
-function App(){
-  // SAFETY FIX: Menus are secured here inside the app.
-  const TABS = [
-    { id: "activity", icon: "◎", label: "Activity" },
-    { id: "finance", icon: "₹", label: "Finance" },
-    { id: "gym", icon: "◈", label: "Gym" },
-    { id: "skills", icon: "◑", label: "Skills" },
-    { id: "settings", icon: "⚙", label: "Settings" }
-  ];
+// GLOBAL DEFINITION TO PREVENT MENU ERRORS
+const TABS = [
+  { id: "activity", icon: "◎", label: "Activity" },
+  { id: "finance", icon: "₹", label: "Finance" },
+  { id: "gym", icon: "◈", label: "Gym" },
+  { id: "skills", icon: "◑", label: "Skills" },
+  { id: "settings", icon: "⚙", label: "Settings" }
+];
 
+function App(){
   const [tab, setTab] = useState("activity");
   const [hasVisited, setHasVisited] = useLocalStorage("has_visited_v6_final", "false");
   const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
