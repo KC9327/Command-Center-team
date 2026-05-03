@@ -177,6 +177,18 @@ h1, h2, h3, h4, .stat-value {
 .tab-content { animation: slideIn 0.3s ease-out; }
 .welcome-card { animation: fadeIn 0.4s ease-out; }
 </style>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js').then(function(registration) {
+        console.log('ServiceWorker registration successful');
+      }, function(err) {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+    });
+  }
+</script>
+</head>
 </head>
 <body>
 <div id="root"></div>
