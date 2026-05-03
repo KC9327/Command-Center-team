@@ -550,228 +550,220 @@ function Settings(){
 }
 
 function Prophecy(){
-const [timeframe, setTimeframe] = useState(“1 week”);
-const [mode, setMode] = useState(“both”);
-const [status, setStatus] = useState(“idle”);
-const [aiModel, setAiModel] = useLocalStorage(“pref_ai_model”, “chatgpt”);
-const [identity] = useLocalStorage(“sys_ctx”, “”);
+  const [timeframe, setTimeframe] = useState("1 week");
+  const [mode, setMode] = useState("both");
+  const [status, setStatus] = useState("idle");
+  const [aiModel, setAiModel] = useLocalStorage("pref_ai_model", "chatgpt");
+  const [identity] = useLocalStorage("sys_ctx", "");
 
-// Pull all logs from localStorage
-const actEntries = JSON.parse(localStorage.getItem(“entries_activity”) || “[]”);
-const gymEntries = JSON.parse(localStorage.getItem(“entries_gym”) || “[]”);
-const skillEntries = JSON.parse(localStorage.getItem(“entries_skills”) || “[]”);
-const finExp = JSON.parse(localStorage.getItem(“fin_exp”) || “[]”);
-const finInv = JSON.parse(localStorage.getItem(“fin_inv”) || “[]”);
+  // Pull all logs from localStorage
+  const actEntries = JSON.parse(localStorage.getItem("entries_activity") || "[]");
+  const gymEntries = JSON.parse(localStorage.getItem("entries_gym") || "[]");
+  const skillEntries = JSON.parse(localStorage.getItem("entries_skills") || "[]");
+  const finExp = JSON.parse(localStorage.getItem("fin_exp") || "[]");
+  const finInv = JSON.parse(localStorage.getItem("fin_inv") || "[]");
 
-const aiLinks = {
-chatgpt: “https://chatgpt.com/”,
-gemini: “https://gemini.google.com/”,
-claude: “https://claude.ai/”,
-perplexity: “https://www.perplexity.ai/”,
-grok: “https://grok.com/”,
-deepseek: “https://chat.deepseek.com/”,
-manual: null
-};
+  const aiLinks = {
+    chatgpt: "https://chatgpt.com/",
+    gemini: "https://gemini.google.com/",
+    claude: "https://claude.ai/",
+    perplexity: "https://www.perplexity.ai/",
+    grok: "https://grok.com/",
+    deepseek: "https://chat.deepseek.com/",
+    manual: null
+  };
 
-const TIMEFRAMES = [“1 Day”, “1 Week”, “1 Month”, “1 Year”];
-const MODES = [
-{ id: “current”, label: “⚠️ Current Path”, desc: “If nothing changes” },
-{ id: “heroic”, label: “🦁 Heroic Path”, desc: “If you level up” },
-{ id: “both”, label: “🎬 Full Movie”, desc: “Both paths, cinematic” },
-];
+  const TIMEFRAMES = ["1 Day", "1 Week", "1 Month", "1 Year"];
+  const MODES = [
+    { id: "current", label: "⚠️ Current Path", desc: "If nothing changes" },
+    { id: "heroic", label: "🦁 Heroic Path", desc: "If you level up" },
+    { id: "both", label: "🎬 Full Movie", desc: "Both paths, cinematic" },
+  ];
 
-const totalTracked = [
-…actEntries.map(e => ({ type: “Activity”, …e })),
-…gymEntries.map(e => ({ type: “Training”, …e })),
-…skillEntries.map(e => ({ type: “Study”, …e })),
-];
+  const totalTracked = [
+    ...actEntries.map(e => ({ type: "Activity", ...e })),
+    ...gymEntries.map(e => ({ type: "Training", ...e })),
+    ...skillEntries.map(e => ({ type: "Study", ...e })),
+  ];
 
-const hasData = totalTracked.length > 0 || finExp.length > 0;
+  const hasData = totalTracked.length > 0 || finExp.length > 0;
 
-const buildPrompt = () => {
-const logSummary = totalTracked.length > 0
-? totalTracked.map(e => `[${e.type}] ${e.time || ""} | ${e.cat} | ${e.mins}m | ${e.text}`).join(”\n”)
-: “No activity logs yet.”;
+  const buildPrompt = () => {
+    const logSummary = totalTracked.length > 0
+      ? totalTracked.map(e => `[${e.type}] ${e.time || ""} | ${e.cat} | ${e.mins}m | ${e.text}`).join("\n")
+      : "No activity logs yet.";
 
-```
-const finSummary = finExp.length > 0
-  ? `Expenses: ${finExp.map(e => `${e.c}: Rs.${e.a}`).join(", ")}\nInvestments: ${finInv.map(e => `${e.c}: Rs.${e.a}`).join(", ") || "None"}`
-  : "No financial logs yet.";
+    const finSummary = finExp.length > 0
+      ? `Expenses: ${finExp.map(e => `${e.c}: Rs.${e.a}`).join(", ")}\nInvestments: ${finInv.map(e => `${e.c}: Rs.${e.a}`).join(", ") || "None"}`
+      : "No financial logs yet.";
 
-const modeInstructions = {
-  current: `Write ONLY the "Current Path" — a vivid, honest, cinematic scene of what ${timeframe} from now looks like IF the person continues exactly as they are today. No sugarcoating. Show consequences of current patterns.`,
-  heroic: `Write ONLY the "Heroic Path" — a vivid, inspiring, cinematic scene of what ${timeframe} from now looks like IF the person makes the 3 key changes their logs reveal they need. Make it feel real and earned, not fantasy.`,
-  both: `Write a FULL CINEMATIC PROPHECY with two scenes:
-```
+    const modeInstructions = {
+      current: `Write ONLY the "Current Path" — a vivid, honest, cinematic scene of what ${timeframe} from now looks like IF the person continues exactly as they are today. No sugarcoating. Show consequences of current patterns.`,
+      heroic: `Write ONLY the "Heroic Path" — a vivid, inspiring, cinematic scene of what ${timeframe} from now looks like IF the person makes the 3 key changes their logs reveal they need. Make it feel real and earned, not fantasy.`,
+      both: `Write a FULL CINEMATIC PROPHECY with two scenes:
 
-SCENE 1 — “THE CURRENT PATH” (dark, honest, consequences of today’s patterns)
-SCENE 2 — “THE HEROIC PATH” (inspiring, earned, if they make 3 key changes)
+SCENE 1 — "THE CURRENT PATH" (dark, honest, consequences of today's patterns)
+SCENE 2 — "THE HEROIC PATH" (inspiring, earned, if they make 3 key changes)
 
-End with: “THE 3 PIVOTS” — the exact 3 changes that determine which path becomes real.`
-};
+End with: "THE 3 PIVOTS" — the exact 3 changes that determine which path becomes real.`
+    };
 
-```
-return `ABOUT ME:\n${identity || "A disciplined person working toward their goals."}\n\nMY LOGS (Recent Activity):\n${logSummary}\n\nMY FINANCES:\n${finSummary}\n\nPROPHECY REQUEST — ${timeframe.toUpperCase()} FROM NOW:\n\n${modeInstructions[mode]}\n\nSTYLE RULES:\n- Write like a movie narrator. Present tense. Vivid scenes.\n- Use specific details from the logs (actual categories, times, patterns).\n- Each scene: 3-4 punchy paragraphs max.\n- Make the person FEEL it, not just read it.\n- End with 1 powerful line that stays with them.`;
-```
+    return `ABOUT ME:\n${identity || "A disciplined person working toward their goals."}\n\nMY LOGS (Recent Activity):\n${logSummary}\n\nMY FINANCES:\n${finSummary}\n\nPROPHECY REQUEST — ${timeframe.toUpperCase()} FROM NOW:\n\n${modeInstructions[mode]}\n\nSTYLE RULES:\n- Write like a movie narrator. Present tense. Vivid scenes.\n- Use specific details from the logs (actual categories, times, patterns).\n- Each scene: 3-4 punchy paragraphs max.\n- Make the person FEEL it, not just read it.\n- End with 1 powerful line that stays with them.`;
+  };
 
-};
+  const generate = async () => {
+    if (!hasData) return alert("Log some activities first to generate your prophecy.");
+    try {
+      setStatus("copying");
+      const prompt = buildPrompt();
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(prompt);
+      } else {
+        const t = document.createElement("textarea");
+        t.value = prompt;
+        document.body.appendChild(t);
+        t.select();
+        document.execCommand("copy");
+        document.body.removeChild(t);
+      }
+      setStatus("copied");
+      setTimeout(() => {
+        if (aiLinks[aiModel]) window.open(aiLinks[aiModel], "_blank");
+        setStatus("idle");
+      }, 1500);
+    } catch (e) {
+      setStatus("idle");
+      alert("Clipboard error.");
+    }
+  };
 
-const generate = async () => {
-if (!hasData) return alert(“Log some activities first to generate your prophecy.”);
-try {
-setStatus(“copying”);
-const prompt = buildPrompt();
-if (navigator.clipboard && window.isSecureContext) {
-await navigator.clipboard.writeText(prompt);
-} else {
-const t = document.createElement(“textarea”);
-t.value = prompt;
-document.body.appendChild(t);
-t.select();
-document.execCommand(“copy”);
-document.body.removeChild(t);
-}
-setStatus(“copied”);
-setTimeout(() => {
-if (aiLinks[aiModel]) window.open(aiLinks[aiModel], “_blank”);
-setStatus(“idle”);
-}, 1500);
-} catch (e) {
-setStatus(“idle”);
-alert(“Clipboard error.”);
-}
-};
+  const patternInsights = () => {
+    if (totalTracked.length === 0) return [];
+    const catCount = {};
+    totalTracked.forEach(e => { catCount[e.cat] = (catCount[e.cat] || 0) + 1; });
+    const sorted = Object.entries(catCount).sort((a, b) => b[1] - a[1]);
+    return sorted.slice(0, 3);
+  };
 
-const patternInsights = () => {
-if (totalTracked.length === 0) return [];
-const catCount = {};
-totalTracked.forEach(e => { catCount[e.cat] = (catCount[e.cat] || 0) + 1; });
-const sorted = Object.entries(catCount).sort((a, b) => b[1] - a[1]);
-return sorted.slice(0, 3);
-};
+  const patterns = patternInsights();
+  const totalMins = totalTracked.reduce((s, e) => s + (e.mins || 0), 0);
 
-const patterns = patternInsights();
-const totalMins = totalTracked.reduce((s, e) => s + (e.mins || 0), 0);
+  return (
+    <div>
+      {/* HEADER CARD */}
+      <div className="card" style={{background: "linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)", border: "none", textAlign: "center", padding: 28}}>
+        <div style={{fontSize: 48, marginBottom: 8}}>🎬</div>
+        <h2 style={{color: "#F2F2F7", fontSize: 24, marginBottom: 6}}>Life Prophecy</h2>
+        <p style={{color: "#8E8E93", fontSize: 13, lineHeight: 1.6}}>
+          Based on your logs, the AI writes a cinematic scene of your future — two paths, your choice.
+        </p>
+      </div>
 
-return (
-<div>
-{/* HEADER CARD */}
-<div className=“card” style={{background: “linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)”, border: “none”, textAlign: “center”, padding: 28}}>
-<div style={{fontSize: 48, marginBottom: 8}}>🎬</div>
-<h2 style={{color: “#F2F2F7”, fontSize: 24, marginBottom: 6}}>Life Prophecy</h2>
-<p style={{color: “#8E8E93”, fontSize: 13, lineHeight: 1.6}}>
-Based on your logs, the AI writes a cinematic scene of your future — two paths, your choice.
-</p>
-</div>
-
-```
-  {/* LOG SNAPSHOT */}
-  <div className="card">
-    <span className="lbl">Your Log Snapshot</span>
-    {!hasData ? (
-      <p style={{fontSize: 13, color: "#8E8E93", fontStyle: "italic", textAlign: "center", padding: "12px 0"}}>
-        No logs found. Start logging your activities, finances, gym, and study sessions first.
-      </p>
-    ) : (
-      <div>
-        <div style={{display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 14}}>
-          <div style={{background: "#F2F2F7", borderRadius: 16, padding: 12, textAlign: "center"}}>
-            <div style={{fontSize: 22, fontWeight: 800, color: "#1C1C1E"}}>{totalTracked.length}</div>
-            <div style={{fontSize: 10, color: "#8E8E93", marginTop: 2}}>ENTRIES</div>
-          </div>
-          <div style={{background: "#F2F2F7", borderRadius: 16, padding: 12, textAlign: "center"}}>
-            <div style={{fontSize: 18, fontWeight: 800, color: "#1C1C1E"}}>{Math.floor(totalMins/60)}h {totalMins%60}m</div>
-            <div style={{fontSize: 10, color: "#8E8E93", marginTop: 2}}>TRACKED</div>
-          </div>
-          <div style={{background: "#F2F2F7", borderRadius: 16, padding: 12, textAlign: "center"}}>
-            <div style={{fontSize: 22, fontWeight: 800, color: "#1C1C1E"}}>{finExp.length}</div>
-            <div style={{fontSize: 10, color: "#8E8E93", marginTop: 2}}>EXPENSES</div>
-          </div>
-        </div>
-        {patterns.length > 0 && (
+      {/* LOG SNAPSHOT */}
+      <div className="card">
+        <span className="lbl">Your Log Snapshot</span>
+        {!hasData ? (
+          <p style={{fontSize: 13, color: "#8E8E93", fontStyle: "italic", textAlign: "center", padding: "12px 0"}}>
+            No logs found. Start logging your activities, finances, gym, and study sessions first.
+          </p>
+        ) : (
           <div>
-            <span className="lbl">Top Patterns Detected</span>
-            {patterns.map(([cat, count]) => (
-              <div key={cat} style={{display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #F2F2F7"}}>
-                <span style={{fontSize: 14}}>{cat}</span>
-                <span style={{fontSize: 13, fontWeight: 700, color: "#5E5CE6"}}>{count}x logged</span>
+            <div style={{display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 14}}>
+              <div style={{background: "#F2F2F7", borderRadius: 16, padding: 12, textAlign: "center"}}>
+                <div style={{fontSize: 22, fontWeight: 800, color: "#1C1C1E"}}>{totalTracked.length}</div>
+                <div style={{fontSize: 10, color: "#8E8E93", marginTop: 2}}>ENTRIES</div>
               </div>
-            ))}
+              <div style={{background: "#F2F2F7", borderRadius: 16, padding: 12, textAlign: "center"}}>
+                <div style={{fontSize: 18, fontWeight: 800, color: "#1C1C1E"}}>{Math.floor(totalMins/60)}h {totalMins%60}m</div>
+                <div style={{fontSize: 10, color: "#8E8E93", marginTop: 2}}>TRACKED</div>
+              </div>
+              <div style={{background: "#F2F2F7", borderRadius: 16, padding: 12, textAlign: "center"}}>
+                <div style={{fontSize: 22, fontWeight: 800, color: "#1C1C1E"}}>{finExp.length}</div>
+                <div style={{fontSize: 10, color: "#8E8E93", marginTop: 2}}>EXPENSES</div>
+              </div>
+            </div>
+            {patterns.length > 0 && (
+              <div>
+                <span className="lbl">Top Patterns Detected</span>
+                {patterns.map(([cat, count]) => (
+                  <div key={cat} style={{display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #F2F2F7"}}>
+                    <span style={{fontSize: 14}}>{cat}</span>
+                    <span style={{fontSize: 13, fontWeight: 700, color: "#5E5CE6"}}>{count}x logged</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
-    )}
-  </div>
 
-  {/* TIMEFRAME SELECTOR */}
-  <div className="card">
-    <span className="lbl">Prophecy Timeframe</span>
-    <div style={{display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 20}}>
-      {TIMEFRAMES.map(t => (
-        <button key={t} onClick={() => setTimeframe(t)}
-          style={{padding: "12px 4px", borderRadius: 14, border: timeframe === t ? "2px solid #5E5CE6" : "1.5px solid #E5E5EA", background: timeframe === t ? "#5E5CE6" : "#F2F2F7", color: timeframe === t ? "#fff" : "#3A3A3C", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif"}}>
-          {t}
+      {/* TIMEFRAME SELECTOR */}
+      <div className="card">
+        <span className="lbl">Prophecy Timeframe</span>
+        <div style={{display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 20}}>
+          {TIMEFRAMES.map(t => (
+            <button key={t} onClick={() => setTimeframe(t)}
+              style={{padding: "12px 4px", borderRadius: 14, border: timeframe === t ? "2px solid #5E5CE6" : "1.5px solid #E5E5EA", background: timeframe === t ? "#5E5CE6" : "#F2F2F7", color: timeframe === t ? "#fff" : "#3A3A3C", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif"}}>
+              {t}
+            </button>
+          ))}
+        </div>
+
+        <span className="lbl">Prophecy Mode</span>
+        <div style={{display: "flex", flexDirection: "column", gap: 10, marginBottom: 20}}>
+          {MODES.map(md => (
+            <button key={md.id} onClick={() => setMode(md.id)}
+              style={{padding: "14px 16px", borderRadius: 16, border: mode === md.id ? "2px solid #5E5CE6" : "1.5px solid #E5E5EA", background: mode === md.id ? "#EEF0FF" : "#F2F2F7", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+              <div>
+                <div style={{fontSize: 15, fontWeight: 700, color: mode === md.id ? "#5E5CE6" : "#1C1C1E", fontFamily: "'Outfit', sans-serif"}}>{md.label}</div>
+                <div style={{fontSize: 12, color: "#8E8E93", marginTop: 2}}>{md.desc}</div>
+              </div>
+              {mode === md.id && <span style={{fontSize: 18}}>✓</span>}
+            </button>
+          ))}
+        </div>
+
+        <span className="lbl">Route To AI</span>
+        <select value={aiModel} onChange={e => setAiModel(e.target.value)}
+          style={{width: "100%", padding: "12px 14px", background: "#F2F2F7", border: "none", borderRadius: 14, fontFamily: "'Inter', sans-serif", fontSize: 14, marginBottom: 16, outline: "none"}}>
+          <option value="chatgpt">ChatGPT</option>
+          <option value="gemini">Gemini</option>
+          <option value="claude">Claude</option>
+          <option value="perplexity">Perplexity</option>
+          <option value="grok">Grok AI</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="manual">📋 Manual Copy</option>
+        </select>
+
+        <button onClick={generate} disabled={status !== "idle" || !hasData}
+          style={{width: "100%", padding: 18, borderRadius: 18, border: "none", background: status === "copied" ? "#3A4533" : "linear-gradient(135deg, #5E5CE6, #BF5AF2)", color: "#fff", fontSize: 16, fontWeight: 800, cursor: !hasData ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif", opacity: !hasData ? 0.5 : 1, boxShadow: "0 6px 20px rgba(94,92,230,0.35)"}}>
+          {status === "idle" ? `🎬 Generate ${timeframe} Prophecy` : status === "copying" ? "Packaging your story..." : "✓ Copied! Opening AI..."}
         </button>
-      ))}
-    </div>
-
-    <span className="lbl">Prophecy Mode</span>
-    <div style={{display: "flex", flexDirection: "column", gap: 10, marginBottom: 20}}>
-      {MODES.map(md => (
-        <button key={md.id} onClick={() => setMode(md.id)}
-          style={{padding: "14px 16px", borderRadius: 16, border: mode === md.id ? "2px solid #5E5CE6" : "1.5px solid #E5E5EA", background: mode === md.id ? "#EEF0FF" : "#F2F2F7", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-          <div>
-            <div style={{fontSize: 15, fontWeight: 700, color: mode === md.id ? "#5E5CE6" : "#1C1C1E", fontFamily: "'Outfit', sans-serif"}}>{md.label}</div>
-            <div style={{fontSize: 12, color: "#8E8E93", marginTop: 2}}>{md.desc}</div>
-          </div>
-          {mode === md.id && <span style={{fontSize: 18}}>✓</span>}
-        </button>
-      ))}
-    </div>
-
-    <span className="lbl">Route To AI</span>
-    <select value={aiModel} onChange={e => setAiModel(e.target.value)}
-      style={{width: "100%", padding: "12px 14px", background: "#F2F2F7", border: "none", borderRadius: 14, fontFamily: "'Inter', sans-serif", fontSize: 14, marginBottom: 16, outline: "none"}}>
-      <option value="chatgpt">ChatGPT</option>
-      <option value="gemini">Gemini</option>
-      <option value="claude">Claude</option>
-      <option value="perplexity">Perplexity</option>
-      <option value="grok">Grok AI</option>
-      <option value="deepseek">DeepSeek</option>
-      <option value="manual">📋 Manual Copy</option>
-    </select>
-
-    <button onClick={generate} disabled={status !== "idle" || !hasData}
-      style={{width: "100%", padding: 18, borderRadius: 18, border: "none", background: status === "copied" ? "#3A4533" : "linear-gradient(135deg, #5E5CE6, #BF5AF2)", color: "#fff", fontSize: 16, fontWeight: 800, cursor: !hasData ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif", opacity: !hasData ? 0.5 : 1, boxShadow: "0 6px 20px rgba(94,92,230,0.35)"}}>
-      {status === "idle" ? `🎬 Generate ${timeframe} Prophecy` : status === "copying" ? "Packaging your story..." : "✓ Copied! Opening AI..."}
-    </button>
-    <div style={{fontSize: 11, color: "#8E8E93", marginTop: 10, textAlign: "center", fontStyle: "italic"}}>
-      100% Private. Your logs are packaged locally and sent to your clipboard.
-    </div>
-  </div>
-
-  {/* HOW IT WORKS */}
-  <div className="card" style={{background: "#F2F2F7", border: "none"}}>
-    <span className="lbl">How It Works</span>
-    {[
-      ["📝", "Log your day", "Activities, finance, gym, study — the more you log, the sharper the prophecy"],
-      ["🎬", "Choose timeframe", "1 day for tomorrow's preview, 1 year for the big vision"],
-      ["🤖", "AI writes your story", "Copied to clipboard, opens your chosen AI in one tap"],
-      ["🔁", "Two paths shown", "Current path vs Heroic path — and the 3 pivots that decide"]
-    ].map(([icon, title, desc]) => (
-      <div key={title} style={{display: "flex", gap: 14, marginBottom: 16, alignItems: "flex-start"}}>
-        <span style={{fontSize: 24}}>{icon}</span>
-        <div>
-          <div style={{fontSize: 14, fontWeight: 700, marginBottom: 2}}>{title}</div>
-          <div style={{fontSize: 12, color: "#8E8E93", lineHeight: 1.5}}>{desc}</div>
+        <div style={{fontSize: 11, color: "#8E8E93", marginTop: 10, textAlign: "center", fontStyle: "italic"}}>
+          100% Private. Your logs are packaged locally and sent to your clipboard.
         </div>
       </div>
-    ))}
-  </div>
-</div>
-```
 
-);
+      {/* HOW IT WORKS */}
+      <div className="card" style={{background: "#F2F2F7", border: "none"}}>
+        <span className="lbl">How It Works</span>
+        {[
+          ["📝", "Log your day", "Activities, finance, gym, study — the more you log, the sharper the prophecy"],
+          ["🎬", "Choose timeframe", "1 day for tomorrow's preview, 1 year for the big vision"],
+          ["🤖", "AI writes your story", "Copied to clipboard, opens your chosen AI in one tap"],
+          ["🔁", "Two paths shown", "Current path vs Heroic path — and the 3 pivots that decide"]
+        ].map(([icon, title, desc]) => (
+          <div key={title} style={{display: "flex", gap: 14, marginBottom: 16, alignItems: "flex-start"}}>
+            <span style={{fontSize: 24}}>{icon}</span>
+            <div>
+              <div style={{fontSize: 14, fontWeight: 700, marginBottom: 2}}>{title}</div>
+              <div style={{fontSize: 12, color: "#8E8E93", lineHeight: 1.5}}>{desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 const DEFAULT_TABS = [
@@ -779,7 +771,7 @@ const DEFAULT_TABS = [
   { id: "finance", icon: "₹", label: "Ledger" },
   { id: "gym", icon: "◈", label: "Training" },
   { id: "skills", icon: "◑", label: "Study" },
-  { id: “prophecy”, icon: “🎬”, label: “Prophecy” },
+  { id: "prophecy", icon: "🎬", label: "Prophecy" },
   { id: "settings", icon: "⚙", label: "Config" }
 ];
 
@@ -865,7 +857,7 @@ function App(){
            t.id === "finance" ? <Finance/> :
            t.id === "gym" ? <Gym/> : 
            t.id === "skills" ? <Skills/> :
-           t.id === “prophecy” ? <Prophecy/> :
+            t.id === "prophecy" ? <Prophecy/> :
            t.id === "settings" ? <Settings/> : 
            <GenericLogger sectionId={t.id} title={t.label} icon={t.icon} tagsStr={t.tags} />}
         </div>
