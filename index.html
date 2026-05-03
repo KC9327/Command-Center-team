@@ -891,6 +891,17 @@ const CHANGELOG = [
 ];
 
 function App(){
+  // --- NEW: THE GATEKEEPER (VIP LIST) ---
+  const VALID_PASSCODES = [
+    "KRISHNA-ADMIN-99", 
+    "GUEST-A1B2",       
+    "USER-77XQ",        
+    "FAMILY-0000"       
+  ]; // Add or remove codes here as needed
+
+  const [isUnlocked, setIsUnlocked] = useLocalStorage("sys_unlocked", "false");
+  const [pinAttempt, setPinAttempt] = useState("");
+
   const [customTabsStr] = useLocalStorage("custom_tabs", []);
   const customTabs = Array.isArray(customTabsStr) ? customTabsStr : [];
   const [tab, setTab] = useState("activity");
@@ -948,6 +959,40 @@ function App(){
     ...customTabs
   ];
 
+  const handleUnlock = () => {
+    // .includes() checks if their attempt matches ANY code on your VIP list
+    if (VALID_PASSCODES.includes(pinAttempt.trim())) {
+      setIsUnlocked("true");
+    } else {
+      alert("Access Denied: Invalid Passcode.");
+      setPinAttempt("");
+    }
+  };
+
+  // --- NEW: THE LOCK SCREEN RENDER ---
+  if (isUnlocked !== "true") {
+    return <div style={{maxWidth: 520, margin: "0 auto", padding: "0 20px", height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center"}}>
+      <div className="card" style={{textAlign: "center", padding: "40px 20px", boxShadow: "0 20px 40px rgba(0,0,0,0.08)"}}>
+        <div style={{fontSize: 50, marginBottom: 16}}>🔒</div>
+        <h2 style={{fontSize: 24, marginBottom: 8}}>Encrypted Access</h2>
+        <p style={{fontSize: 14, color: "#8E8E93", marginBottom: 24, padding: "0 10px"}}>
+          This application operates on a private, localized server. Please enter your invite passcode.
+        </p>
+        <input 
+          type="password" 
+          value={pinAttempt} 
+          onChange={e => setPinAttempt(e.target.value)} 
+          placeholder="Enter Passcode..." 
+          className="inp" 
+          style={{textAlign: "center", letterSpacing: 2, fontSize: 18}}
+          onKeyDown={(e) => { if(e.key === 'Enter') handleUnlock(); }}
+        />
+        <button onClick={handleUnlock} className="pbtn" style={{marginTop: 12}}>Unlock System</button>
+      </div>
+    </div>;
+  }
+
+  // --- EXISTING APP RENDER ---
   return <div style={{maxWidth: 520, margin: "0 auto", padding: "0 20px 100px"}}>
     {showWelcome && (
       <div style={{position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(28,28,30,0.95)", backdropFilter:"blur(8px)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:20}}>
