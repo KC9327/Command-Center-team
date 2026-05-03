@@ -357,7 +357,7 @@ function GenericLogger({ sectionId, title, icon, tagsStr }) {
 
 // Redirecting all specific tabs to the unified Master Engine
 function Activity(){
-  const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Admin");
+  const [actStr]=useLocalStorage("sys_act","Deep work, Meetings, Commute, Break, Admin");
   return <GenericLogger sectionId="activity" title="Journal" icon="◎" tagsStr={actStr} />;
 }
 function Finance(){
