@@ -644,6 +644,11 @@ const [draftCustom, setDraftCustom] = useState(Array.isArray(customTabs) ? custo
         <input type="file" accept=".json" onChange={importData} style={{fontSize:"12px", width:"100%"}}/>
       </div>
     </div>
+
+    {/* --- NEW: SILENT VERSION DISPLAY --- */}
+    <div style={{textAlign: "center", marginTop: 24, marginBottom: 10}}>
+      <span style={{fontSize: 10, color: "#C7C7CC", letterSpacing: 1, textTransform: "uppercase", fontWeight: 700}}>My Chronicles • v1.1.0</span>
+    </div>
   </div>;
 }
 
@@ -876,9 +881,18 @@ Write like a novelist. No bullet points. No video or film language. Pure prose.`
   );
 }
 
+// --- NEW: VERSION CONTROL & CHANGELOG ---
+const APP_VERSION = "v1.1.0";
+const CHANGELOG = [
+  "Uniform typography and interface design.",
+  "Added Life Prophecy engine for cinematic forecasting.",
+  "Added live Storage Monitor in Config.",
+  "Upgraded to installable App format."
+];
+
 function App(){
   const [customTabsStr] = useLocalStorage("custom_tabs", []);
-const customTabs = Array.isArray(customTabsStr) ? customTabsStr : [];
+  const customTabs = Array.isArray(customTabsStr) ? customTabsStr : [];
   const [tab, setTab] = useState("activity");
   const [showMore, setShowMore] = useState(false);
 
@@ -886,6 +900,16 @@ const customTabs = Array.isArray(customTabsStr) ? customTabsStr : [];
   const [showWelcome, setShowWelcome] = useState(hasVisited !== "true");
   const [welcomeStep, setWelcomeStep] = useState(1);
   const [tempIdentity, setTempIdentity] = useState("");
+
+  // --- NEW: UPDATE TRACKER ---
+  const [lastSeenVersion, setLastSeenVersion] = useLocalStorage("last_seen_version", "v1.0.0");
+  // Only show update modal if they have finished the welcome tour AND the versions don't match
+  const [showUpdate, setShowUpdate] = useState(hasVisited === "true" && lastSeenVersion !== APP_VERSION);
+
+  const finishUpdate = () => {
+    setLastSeenVersion(APP_VERSION);
+    setShowUpdate(false);
+  };
 
   const finishWelcome = () => {
     if (tempIdentity.trim()) {
@@ -964,6 +988,26 @@ const customTabs = Array.isArray(customTabsStr) ? customTabsStr : [];
               <button onClick={finishWelcome} className="pbtn">Start Journey</button>
             </div>
           )}
+        </div>
+      </div>
+    )}
+
+    {/* --- NEW: WHAT'S NEW MODAL (The Announcement Way) --- */}
+    {showUpdate && (
+      <div style={{position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(28,28,30,0.95)", backdropFilter:"blur(8px)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:20}}>
+        <div className="card welcome-card" style={{width:"100%", maxWidth:400, padding:30}}>
+          <div style={{textAlign: "center", fontSize:50, marginBottom:10}}>✨</div>
+          <h2 style={{marginBottom:4, fontSize:24, textAlign: "center"}}>What's New</h2>
+          <p style={{fontSize:14, color:"#5E5CE6", fontWeight: 700, marginBottom:20, textAlign: "center"}}>Version {APP_VERSION}</p>
+          
+          <ul style={{fontSize:14, color:"#3A3A3C", marginBottom:24, paddingLeft: 20, lineHeight: 1.6}}>
+            {CHANGELOG.map((item, i) => <li key={i} style={{marginBottom: 8}}>{item}</li>)}
+          </ul>
+          
+          <div style={{textAlign: "center"}}>
+            <p style={{fontSize:12, color:"#8E8E93", marginBottom:16, fontStyle: "italic"}}>Your local data is safe and untouched.</p>
+            <button onClick={finishUpdate} className="pbtn">Continue to Chronicles</button>
+          </div>
         </div>
       </div>
     )}
