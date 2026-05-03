@@ -815,13 +815,6 @@ Write like a novelist. No bullet points. No video or film language. Pure prose.`
   );
 }
 
-const SYSTEM_TABS = [
-  { id: "activity", icon: "◎", label: "Journal" },
-  { id: "finance", icon: "₹", label: "Ledger" },
-  { id: "gym", icon: "◈", label: "Training" },
-  { id: "skills", icon: "◑", label: "Study" },
-];
-
 function App(){
   const [customTabsStr] = useLocalStorage("custom_tabs", "[]");
   const customTabs = JSON.parse(customTabsStr);
