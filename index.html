@@ -482,8 +482,8 @@ function Settings(){
     }
   };
 
-  const [customTabs, setCustomTabs] = useLocalStorage("custom_tabs", "[]");
-  const [draftCustom, setDraftCustom] = useState(customTabs);
+  const [customTabs, setCustomTabs] = useLocalStorage("custom_tabs", []);
+const [draftCustom, setDraftCustom] = useState(Array.isArray(customTabs) ? customTabs : []);
   const hasCustomChanges = JSON.stringify(draftCustom) !== JSON.stringify(customTabs);
 
   const saveCustomTabs = () => {
@@ -825,8 +825,8 @@ Write like a novelist. No bullet points. No video or film language. Pure prose.`
 }
 
 function App(){
-  const [customTabsStr] = useLocalStorage("custom_tabs", JSON.stringify([]));
-  const customTabs = JSON.parse(customTabsStr);
+  const [customTabsStr] = useLocalStorage("custom_tabs", []);
+const customTabs = Array.isArray(customTabsStr) ? customTabsStr : [];
   const [tab, setTab] = useState("activity");
   const [showMore, setShowMore] = useState(false);
 
