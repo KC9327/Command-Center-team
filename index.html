@@ -816,7 +816,7 @@ Write like a novelist. No bullet points. No video or film language. Pure prose.`
 }
 
 function App(){
-  const [customTabsStr] = useLocalStorage("custom_tabs", "[]");
+  const [customTabsStr] = useLocalStorage("custom_tabs", JSON.stringify([]));
   const customTabs = JSON.parse(customTabsStr);
   const [tab, setTab] = useState("activity");
   const [showMore, setShowMore] = useState(false);
