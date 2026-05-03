@@ -252,16 +252,19 @@ function AIBtn({prompt, label}){
       setStatus("copying");
       const finalPrompt = `ABOUT ME / ASSISTANT PERSONA:\n${identity}\n\nDATA TO ANALYZE (${label}):\n${prompt}\n\nSTRATEGIC INSTRUCTIONS:\n1. Review the data and analyze impact.\n2. Provide insights on betterment and improvisation.\n3. End with an encouragement quote.`;
       
-      // Universal Copy Logic
+      // Universal Copy Logic with HTTPS Fallback Check
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(finalPrompt);
-      } else {
+      } else if (document.execCommand) {
         const textArea = document.createElement("textarea");
         textArea.value = finalPrompt; 
         document.body.appendChild(textArea);
         textArea.select(); 
-        document.execCommand('copy'); 
+        const successful = document.execCommand('copy'); 
         document.body.removeChild(textArea);
+        if (!successful) throw new Error("Copy command failed");
+      } else {
+        throw new Error("No clipboard access");
       }
       
       setStatus("copied");
@@ -275,7 +278,7 @@ function AIBtn({prompt, label}){
       }, 1500);
     } catch (err) { 
       setStatus("idle"); 
-      alert("Clipboard error. Please ensure the app has permission to access the clipboard."); 
+      alert("Security Block: Clipboard access denied. Please use an HTTPS connection or Localhost to use AI features."); 
     }
   };
 
@@ -517,6 +520,18 @@ const [draftCustom, setDraftCustom] = useState(Array.isArray(customTabs) ? custo
     reader.readAsText(file);
   };
 
+  // NEW: Storage Size Calculator
+  const getStorageSize = () => {
+    let total = 0;
+    for (let x in localStorage) {
+      if (localStorage.hasOwnProperty(x)) {
+        total += ((localStorage[x].length + x.length) * 2); // 2 bytes per character
+      }
+    }
+    return (total / 1024 / 1024).toFixed(2);
+  };
+  const storageUsed = getStorageSize();
+
   return <div>
 
     {/* SECTION 1 — SYSTEM DEFAULTS */}
@@ -580,10 +595,12 @@ const [draftCustom, setDraftCustom] = useState(Array.isArray(customTabs) ? custo
       {hasCustomChanges && <button onClick={saveCustomTabs} className="pbtn" style={{marginTop:12}}>Save Layout</button>}
     </div>
 
-    {/* SECTION 3 — ARCHIVE */}
+    {/* SECTION 3 — ARCHIVE (With Live Storage Readout) */}
     <div className="card" style={{border:"1.5px dashed #C7C7CC"}}>
       <h3 style={{marginBottom:8, fontSize:18}}>Archive Protection</h3>
-      <p style={{fontSize:11, color:"#8E8E93", marginBottom:15, fontStyle:"italic"}}>Export often. Import to restore on any device.</p>
+      <p style={{fontSize:11, color:"#8E8E93", marginBottom:15, fontStyle:"italic"}}>
+        Storage: <span style={{color: storageUsed > 4.0 ? "#FF3B30" : "#5E5CE6", fontWeight: 700}}>{storageUsed}MB</span> / 5.00MB used. Export often to keep a backup.
+      </p>
       <div style={{display:"flex", gap:8}}>
         <button onClick={exportData} className="pbtn" style={{flex:1, marginTop:0}}>Export</button>
         <button onClick={()=>{if(window.confirm("Erase all data?")){localStorage.clear(); window.location.reload();}}} className="pbtn" style={{flex:1, background:"#FF3B30", marginTop:0}}>Reset App</button>
